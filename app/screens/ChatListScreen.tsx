@@ -20,10 +20,11 @@ import { spacing } from "../theme";
 // @ts-ignore
 export const ChatListScreen: FC<StackScreenProps<AppStackScreenProps, "ChatList">> = observer(function ChatListScreen() {
   // Pull in one of our MST stores
-  const { chatStore } = useStores()
+  const { chatStore, messageStore: {load} } = useStores()
 
   const renderItem = ({ item }) => (
     <ListItem onPress={() => {
+      load(item.id)
       navigation.navigate(
         "Chat", {
         chatId: item.id

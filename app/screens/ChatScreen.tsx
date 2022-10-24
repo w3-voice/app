@@ -21,13 +21,13 @@ import { useStores } from "../models"
 // @ts-ignore
 export const ChatScreen: FC<StackScreenProps<AppStackScreenProps, "ChatNavigator">> = observer(function ChatScreen() {
   // Pull in one of our MST stores
-  const { messageStore: { messages, clear, load, send } } = useStores()
+  const { messageStore: { messages, send }, identity } = useStores()
 
   // Pull in navigation via hook
   // const navigation = useNavigation()
   const route = useRoute()
   const { chatId } = route.params
-  load(chatId)
+  // load(chatId)
 
   return (
     messages.length > 0 &&
@@ -37,7 +37,8 @@ export const ChatScreen: FC<StackScreenProps<AppStackScreenProps, "ChatNavigator
         messages.map(msg=>send(chatId, msg))
       }}
       user={{
-        _id: 1,
+        _id: identity.id,
+        name: identity.name
       }}
     />
   )

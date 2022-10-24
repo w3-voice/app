@@ -19,10 +19,12 @@ export const MessageStoreModel = types
       self.messages.replace(messages) 
     })
 
-    const send = flow(function* send(chatId: string, message: Message){
-      api.beeCore.sendChatMessage(chatId, message)
-      self.messages.push(message)
-    })
+    const send = (chatId: string, msg: Message)=>{
+      api.beeCore.sendChatMessage(chatId, msg)
+      console.log(msg)
+      self.messages.push(msg)
+      // self.messages.push(message)
+    }
 
     const clear = ()=>{
       self.selected = null
