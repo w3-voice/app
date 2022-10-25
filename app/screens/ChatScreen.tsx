@@ -10,34 +10,20 @@ import { GiftedChat } from 'react-native-gifted-chat'
 // import { useNavigation } from "@react-navigation/native"
 import { useStores } from "../models"
 
-// STOP! READ ME FIRST!
-// To fix the TS error below, you'll need to add the following things in your navigation config:
-// - Add `Chat: undefined` to AppStackParamList
-// - Import your screen, and add it to the stack:
-//     `<Stack.Screen name="Chat" component={ChatScreen} />`
-// Hint: Look for the 🔥!
 
-// REMOVE ME! ⬇️ This TS ignore will not be necessary after you've added the correct navigator param type
-// @ts-ignore
 export const ChatScreen: FC<StackScreenProps<AppStackScreenProps, "ChatNavigator">> = observer(function ChatScreen() {
   // Pull in one of our MST stores
-  const { messageStore: { messages, send }, identity } = useStores()
-
-  // Pull in navigation via hook
-  // const navigation = useNavigation()
-  const route = useRoute()
-  const { chatId } = route.params
-  // load(chatId)
+  const { chatStore: { messages, send }, identity } = useStores()
 
   return (
-    messages.length > 0 &&
+    
     <GiftedChat
       messages={messages.slice()}
       onSend={messages => {
-        messages.map(msg=>send(chatId, msg))
+        messages.map(msg=>send(msg))
       }}
       user={{
-        _id: identity.id,
+        _id: identity._id,
         name: identity.name
       }}
     />

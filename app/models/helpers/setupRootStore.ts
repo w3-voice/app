@@ -27,8 +27,8 @@ export async function setupRootStore(rootStore: RootStore) {
 
   try {
     // load the last known state from AsyncStorage
-    restoredState = (await storage.load(ROOT_STATE_STORAGE_KEY)) || {}
-    applySnapshot(rootStore, restoredState)
+    // restoredState = ({} || {})
+    // applySnapshot(rootStore, restoredState)
     
   } catch (e) {
     // if there's any problems loading, then inform the dev what happened
@@ -36,7 +36,7 @@ export async function setupRootStore(rootStore: RootStore) {
       console.tron.error(e.message, null)
     }
   }
-  rootStore.messages.clear()
+  // rootStore.chatStore.clear()
   // stop tracking state changes if we've already setup
   if (_disposer) _disposer()
 

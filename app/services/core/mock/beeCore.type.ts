@@ -2,33 +2,40 @@ export interface BeeCoreInstance {
   getIdentity(): Promise<Identity>
   hasIdentity(): Promise<boolean>
   newIdentity(name: string): Promise<Identity>
+  getChat(chatId: ID): Promise<Chat>
   getChatList(): Promise<Chat[]>
   getChatMessages(id: string): Promise<Message[]>
-  sendChatMessage(chatId: string, msg: Message): void
-  submitNewMessages(handler: (chatId: string, msg: Message)=>void): void
+  sendChatMessage(chatId: ID, msg: Message): void
+  submitIncomingMessages(handler: (chatId: ID, msg: Message)=>void): void
+  getContactList(): Promise<Contact[]>
+  newContact(contact: Contact): Promise<void>
+  generatePMChatId(contact: Contact): ID
+  newPMChat(contact:Contact): Promise<Chat>
 }
 
+export type ID = string
+
 export interface Identity {
-  id: string
+  _id: ID
   name: string
 }
 
 export interface Contact {
-  _id: string,
+  _id: ID,
   name: string
 }
 
 export interface Chat {
-  id: string,
+  _id: ID,
   name: string,
-  members: Contact[]
+  members: ID[]
 }
 
 export interface Message {
-  _id: string,
+  _id: ID,
   text: string,
   createdAt: Date | number
-  user: Contact,
+  user: ID,
   sent?: boolean,
   received?: boolean,
   pending?: boolean,

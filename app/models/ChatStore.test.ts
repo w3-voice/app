@@ -1,4 +1,4 @@
-import { ChatListModel } from "./ChatList"
+import { ChatListModel } from "./ChatStore"
 
 test("can be created", () => {
   const instance = ChatListModel.create({})

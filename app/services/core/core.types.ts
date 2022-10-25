@@ -9,6 +9,6 @@ export interface BeeCore {
 }
 
 export interface Identity {
-  id: string
+  _id: string
   name: string
 }

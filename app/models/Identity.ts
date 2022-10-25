@@ -7,7 +7,7 @@ import { api } from "../services/core"
 export const IdentityModel = types
   .model("Identity")
   .props({
-    id: types.maybe(types.string),
+    _id: types.maybeNull(types.string),
     name: types.maybe(types.string),
     isLoggedIn: types.boolean
   })
@@ -15,20 +15,20 @@ export const IdentityModel = types
   .actions((self) => {
     const newIdentity = flow(function* newIdentity(name: string){
       let idObj = yield api.beeCore.newIdentity(name)
-      self.id = idObj.id
+      self._id = idObj._id
       self.name = idObj.name
       self.isLoggedIn = true
     })
     const loadIdentity = flow(function* load(){
       let hasId = yield api.beeCore.hasIdentity()
       if (!hasId) {
-        self.id = undefined
-        self.name = undefined
+        self._id = null
+        self.name = null
         self.isLoggedIn = false
       }
       else {
         let idObj = yield api.beeCore.getIdentity()
-        self.id = idObj.id
+        self._id = idObj._id
         self.name = idObj.name
         self.isLoggedIn = true
       }

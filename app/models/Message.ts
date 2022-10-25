@@ -10,7 +10,7 @@ export const MessageModel = types
     _id: types.identifier,
     text: types.string,
     createdAt: types.Date,
-    user: ContactModel,
+    user: types.reference(ContactModel),
     sent: types.maybeNull(types.boolean),
     received: types.maybeNull(types.boolean),
     pending: types.maybeNull(types.boolean),

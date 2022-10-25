@@ -8,9 +8,9 @@ import { MessageModel } from "./Message"
 export const ChatModel = types
   .model("Chat")
   .props({
-    id: types.identifier,
+    _id: types.identifier,
     name: types.string,
-    members: types.array(ContactModel),
+    members: types.array(types.reference(ContactModel)),
   })
   .views((self) => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions((self) => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars

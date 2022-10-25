@@ -1,4 +1,4 @@
-import React, { FC } from "react"
+import React, { FC, useEffect } from "react"
 import { FlatList, TouchableOpacity, View } from 'react-native';
 import { observer } from "mobx-react-lite"
 import { TabBarIOSItem, ViewStyle } from "react-native"
@@ -9,37 +9,24 @@ import { useNavigation, useRoute } from "@react-navigation/native"
 import { useStores } from "../models"
 import { spacing } from "../theme";
 
-// STOP! READ ME FIRST!
-// To fix the TS error below, you'll need to add the following things in your navigation config:
-// - Add `ChatList: undefined` to AppStackParamList
-// - Import your screen, and add it to the stack:
-//     `<Stack.Screen name="ChatList" component={ChatListScreen} />`
-// Hint: Look for the 🔥!
 
-// REMOVE ME! ⬇️ This TS ignore will not be necessary after you've added the correct navigator param type
-// @ts-ignore
 export const ChatListScreen: FC<StackScreenProps<AppStackScreenProps, "ChatList">> = observer(function ChatListScreen() {
   // Pull in one of our MST stores
-  const { chatStore, messageStore: {load} } = useStores()
-
-  const renderItem = ({ item }) => (
-    <ListItem onPress={() => {
-      load(item.id)
-      navigation.navigate(
-        "Chat", {
-        chatId: item.id
-      }
-      )
-    }
-    }>
-      <Text text={item.name} />
-    </ListItem>
-  )
+  const { chatStore } = useStores()
 
   // Pull in navigation via hook
   const navigation = useNavigation()
 
-
+  const renderItem = ({ item }) => (
+    <ListItem onPress={() => {
+      chatStore.clear()
+      console.log("set chat id: ", item._id)
+      chatStore.selectChat(item._id)
+      navigation.navigate("Chat")
+    }}>
+      <Text text={item.name} />
+    </ListItem>
+  )
 
   return (
     <>
@@ -49,14 +36,17 @@ export const ChatListScreen: FC<StackScreenProps<AppStackScreenProps, "ChatList"
         contentContainerStyle={$screenContentContainer}
       >
         <FlatList
-          data={chatStore.list}
+          data={chatStore.chats.slice()}
           renderItem={renderItem}
-          keyExtractor={item => item.id}
+          keyExtractor={item => item._id}
         />
       </Screen>
       <View style={$fixedView}>
         <Button
           style={$fab}
+          onPress={() => {
+            navigation.navigate("NewChat")
+          }}
         />
       </View>
     </>

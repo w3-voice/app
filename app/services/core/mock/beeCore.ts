@@ -1,13 +1,16 @@
 import { BeeCore, Identity } from "../core.types";
-import { Chat, Contact, Message } from "./beeCore.type";
+import { Chat, Contact, ID, Message } from "./beeCore.type";
 
 
 class MockBeeCore implements BeeCore {
-    private identity: Identity = undefined
-    private chats: Chat[] = []
+    private identity: Identity = mockIdentity
+    private chats: Chat[] = mockChatList
+    private messagesMap: Record<string, Message[]> = mockMessages()
+    private contacts: Contact[] = mockContact
+
     getIdentity(): Promise<Identity> {
-        return new Promise((resolve,reject)=>{
-            if(this.identity != undefined){
+        return new Promise((resolve, reject) => {
+            if (this.identity != undefined) {
                 return resolve(this.identity)
             }
             return reject("not found")
@@ -15,68 +18,115 @@ class MockBeeCore implements BeeCore {
 
     }
     hasIdentity(): Promise<boolean> {
-        return new Promise((resolve,reject)=>{
-            if(this.identity != undefined){
+        return new Promise((resolve, reject) => {
+            if (this.identity != undefined) {
                 return resolve(true)
             }
             return resolve(false)
         })
     }
     newIdentity(name: any): Promise<Identity> {
-        return new Promise((resolve,reject)=>{
-            this.identity = {
-                id: "1",
-                name: name
-            }
+        return new Promise((resolve, reject) => {
             return resolve(this.identity)
         })
     }
-    getChatList(): Promise<Chat[]> {
-        return new Promise((resolve,reject)=>{
-            return resolve(mockChatList)
+    newPMChat(contact:Contact): Promise<Chat> {
+        const newChat = {
+            _id: generatePMId([contact, this.identity]),
+            name: contact.name,
+            members: [contact._id, this.identity._id],
+        }
+        this.chats.push(newChat)
+        this.messagesMap[newChat._id]=[]
+        return new Promise((resolve, reject) => {
+            return resolve(newChat)
         })
     }
-    getChatMessages(): Promise<Message[]> {
-        return new Promise((resolve,reject)=>{
-            return resolve(mockMessages)
+    getPMChat(contact:Contact) {
+        const _id = generatePMId([contact, this.identity])
+        const exist = this.chats.find((item)=>_id === item._id)
+        if(exist){
+            return new Promise((resolve, reject) => {
+                return resolve(exist)
+            })
+        }else{
+            const newChat = {
+                _id: generatePMId([contact, this.identity]),
+                name: contact.name,
+                members: [contact._id, this.identity._id],
+            }
+            this.chats.push(newChat)
+            this.messagesMap[newChat._id]=[]
+            return new Promise((resolve, reject) => {
+                return resolve(newChat)
+            })
+        }
+  
+    }
+    getChatList(): Promise<Chat[]> {
+        return new Promise((resolve, reject) => {
+            return resolve(this.chats)
+        })
+    }
+    getChatMessages(chatId: string): Promise<Message[]> {
+        return new Promise((resolve, reject) => {
+            return resolve(this.messagesMap[chatId])
         })
     }
     sendChatMessage(chatId: string, msg: Message): void {
         console.log("called")
+        this.messagesMap[chatId].push(msg)
     }
-    submitNewMessages(handler: (chatId: string, msg: Message)=>void): void {}
+    submitIncomingMessages(handler: (chatId: string, msg: Message) => void): void { 
+
+    }
+    getContactList(): Promise<Contact[]> {
+        return new Promise((resolve, reject) => {
+            return resolve(this.contacts)
+        })
+    }
+    newContact(contact: Contact): Promise<void> {
+        this.contacts.push(contact)
+        return new Promise((resolve, reject) => {
+            return resolve()
+        })
+    }
+    generatePMChatId(contact: Contact): ID {
+        return generatePMId([contact,this.identity])
+    }
 
 }
 
-const mockMessages: Message[] = [
-    {
-        _id: "1",
-        text: 'Hello developer',
-        createdAt: new Date(),
-        user: {
-          _id: "1",
-          name: 'ASD'
-        },
-    },
-    {
-        _id: "2",
-        text: 'Hello developer',
-        createdAt: new Date(),
-        user: {
-          _id: "1",
-          name: 'ASD'
-        },
-    },
-    {
-        _id: "3",
-        text: 'Hello developer',
-        createdAt: new Date(),
-        user: {
-          _id: "2",
-          name: 'React Native'
-        },
+const generatePMId = (members: Contact[]) => {
+    console.log(members)
+    return members
+        .map(m => m._id)
+        .sort()
+        .reduce((prev, curr) => {
+            return prev + curr
+        })
+}
+
+const mockMessages = (): Record<string, Message[]> => {
+    const texts = ['Hello developer', 'Tnx']
+    let chatMap: Record<string, Message[]> = {}
+    let index = 0
+    for (let item of mockChatList) {
+        chatMap[item._id] = item.members.map((m) => {
+            index += 1
+            return {
+                _id: index.toString(),
+                text: `Hello from ${m}`,
+                createdAt: new Date(),
+                user: m,
+            }
+        })
+        
     }
-]
+    return chatMap
+
+}
+
 
 const mockContact: Contact[] = [
     {
@@ -96,108 +146,20 @@ const mockContact: Contact[] = [
 
 const mockChatList: Chat[] = [
     {
-        id:"1",
-        name:"farjam",
-        members: [mockContact[0],mockContact[1]],
+        _id: generatePMId([mockContact[0], mockContact[1]]),
+        name: "farjam",
+        members: [mockContact[0]._id, mockContact[1]._id],
     },
     {
-        id: "2",
+        _id: generatePMId([mockContact[0], mockContact[2]]),
         name: "roozi",
-        members: [mockContact[0],mockContact[2]],
+        members: [mockContact[0]._id, mockContact[2]._id],
     },
-    {
-        id: "3",
-        name: "roozi",
-        members: [mockContact[0],mockContact[2]],
-    },
-    {
-        id: "4",
-        name: "roozi",
-        members: [mockContact[0],mockContact[2]]
-    },
-    {
-        id: "6",
-        name: "roozi",
-        members: [mockContact[0],mockContact[2]],
-    },
-    {
-        id: "7",
-        name: "roozi",
-        members: [mockContact[0],mockContact[2]]
-    },    {
-        id: "8",
-        name: "roozi",
-        members: [mockContact[0],mockContact[2]],
-    },
-    {
-        id: "9",
-        name: "roozi",
-        members: [mockContact[0],mockContact[2]],
-    },
-    {
-        id: "10",
-        name: "roozi",
-        members: [mockContact[0],mockContact[2]],
-    },
-    {
-        id: "11",
-        name: "roozi",
-        members: [mockContact[0],mockContact[2]],
-    },
-    {
-        id: "12",
-        name: "roozi",
-        members: [mockContact[0],mockContact[2]],
-    },
-    {
-        id: "13",
-        name: "roozi",
-        members: [mockContact[0],mockContact[2]],
-    },
-    {
-        id: "14",
-        name: "roozi",
-        members: [mockContact[0],mockContact[2]],
-
-    },
-    {
-        id: "15",
-        name: "roozi",
-        members: [mockContact[0],mockContact[2]],
-    },
-    {
-        id: "16",
-        name: "roozi",
-        members: [mockContact[0],mockContact[2]]
-    },
-    {
-        id: "17",
-        name: "roozi",
-        members: [mockContact[0],mockContact[2]],
-    },
-    {
-        id: "18",
-        name: "roozi",
-        members: [mockContact[0],mockContact[2]],
-    },
-    {
-        id: "19",
-        name: "roozi",
-        members: [mockContact[0],mockContact[2]],
-    },
-    {
-        id: "20",
-        name: "roozi",
-        members: [mockContact[0],mockContact[2]],
-    }
 ]
 
-const mockIdentity = {
-    id: "1",
-    name: "farhoud"
-}
+const mockIdentity: Identity = { ...mockContact[0] }
 
 
-export const create = ()=>{
+export const create = () => {
     return new MockBeeCore()
 }
