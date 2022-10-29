@@ -1,5 +1,7 @@
 package com.helloworld;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 
 import com.facebook.react.ReactActivity;
@@ -33,7 +35,9 @@ public class MainActivity extends ReactActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     RNBootSplash.init(this);            // <- initialize the splash screen
-    super.onCreate(null);               // or super.onCreate(savedInstanceState) when not using react-native-screens
+    super.onCreate(null);
+    // or super.onCreate(savedInstanceState) when not using react-native-screens
+    startService(new Intent(MainActivity.this, CoreService.class));
   }
 
   public static class MainActivityDelegate extends ReactActivityDelegate {

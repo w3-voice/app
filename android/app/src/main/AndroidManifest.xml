@@ -2,6 +2,12 @@
   package="com.helloworld">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+
 
     <queries>
       <intent>
@@ -29,5 +35,10 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+        <service
+            android:exported="true"
+            android:name=".CoreService"
+            android:process=":coreProcess"
+            android:enabled="true" />
     </application>
 </manifest>
