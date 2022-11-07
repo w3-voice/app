@@ -6,9 +6,14 @@ import App from "./app/app.tsx"
 import React from "react"
 import { AppRegistry } from "react-native"
 import RNBootSplash from "react-native-bootsplash"
+import { Provider as PaperProvider } from 'react-native-paper'
 
 function IgniteApp() {
-  return <App hideSplashScreen={RNBootSplash.hide} />
+  return (
+    <PaperProvider>
+      <App hideSplashScreen={RNBootSplash.hide} />
+    </PaperProvider>
+  )
 }
 
 AppRegistry.registerComponent("HelloWorld", () => IgniteApp)

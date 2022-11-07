@@ -4,6 +4,7 @@ import { api } from "../services/core"
 import { Message, MessageModel } from "./Message"
 import { ContactModel } from "./Contact"
 import { NewContactModel } from "./NewContact"
+import { apiOwnKeys } from "mobx/dist/internal"
 
 /**
  * Model description here for TypeScript hints.
@@ -21,7 +22,7 @@ export const ChatStoreModel = types
   .actions((self) => {
     const loadContact = flow(function* loadContact(){
       const list = yield api.beeCore.getContactList()
-      console.log("Im am loading from api")
+      console.log("Loading contacts")
       self.contacts.replace(list)
     })
     const addContactAndCreateChat = flow(function* loadContact(){
@@ -29,29 +30,56 @@ export const ChatStoreModel = types
       yield createPMChat(self.newContact._id)
     })
     const addContacts = flow(function* addContacts(){
-      const list = yield api.beeCore.getContactList()
-      console.log("Im am loading from api")
-      self.contacts.replace(list)
-      const newContact = {name: self.newContact.name, _id: self.newContact._id}
-      yield api.beeCore.newContact(newContact)
-      console.log(newContact)
-      self.contacts.push(newContact)
+      const newContact = {...self.newContact}
+      try {
+        yield api.beeCore.newContact(newContact)
+        console.log("Im am loading from api")
+        console.log(newContact)
+        self.contacts.push(newContact)
+      } catch (error) {
+        console.log("failed to create new contract")
+      }
+      
+
 
       console.log("new contact pushed")
     })
     const openPMChat = flow(function* openChat(contactId: string){
+      let done = false;
+      console.log("open chat called")
       const contact = self.contacts.find(item=>item._id===contactId)
-      console.log(contact)
-      const chatID = api.beeCore.generatePMChatId(contact)
-      console.log(chatID)
-      let chat = self.chats.find(item=>item._id === chatID)
-      if(chat){
+      console.log("contact is :",contact)
+      try {
+        const chat: Chat = yield api.beeCore.getPMChat(contact)
+        console.log("chat is is: ",chat)
+        let exist = self.chats.find(item=>item._id === chat._id)
+        if (!exist){
+          self.chats.push(chat)
+        }
         selectChat(chat._id)
-      }else{
-        const newChat = yield api.beeCore.getChat(chatID)
-        self.chats.push(newChat)
-        selectChat(newChat._id)
+        done = true;        
+      } catch (error) {
+        console.log("can not open chat")
       }
+
+      if(!done){
+        try {
+          const chat: Chat = yield api.beeCore.newPMChat(contact)
+          console.log("chat is is: ",chat)
+          self.chats.push(chat)
+          selectChat(chat._id)
+          done = true;        
+        } catch (error) {
+          console.log("can not create chat")
+        }
+      }
+
+      if(done){
+        throw "can not open chat"
+        
+      }
+
+  
     })
     const createPMChat = flow(function* createChat(contactId: string){
       const contact = self.contacts.find(item=>item._id===contactId)
@@ -65,7 +93,6 @@ export const ChatStoreModel = types
       const list = yield api.beeCore.getChatList()
       console.log(list)
       self.chats.replace(list)
-      console.log(self.chats[0]._id)
     })
     const selectChat = flow(function* load(chatId: string){
       console.log(chatId)

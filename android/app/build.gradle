@@ -82,7 +82,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
 project.ext.react = [
     enableHermes: true,  // clean and rebuild if changing
 ]
-
+apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 // This method of including other gradle files is to support symlinks.
 apply from: new File(["node", "--print", "require.resolve('react-native/package.json')"].execute().text.trim(), "../react.gradle");
 
@@ -319,6 +319,8 @@ dependencies {
     }
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    implementation project(':react-native-vector-icons')
 }
 
 

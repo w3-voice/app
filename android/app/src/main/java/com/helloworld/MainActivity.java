@@ -1,8 +1,13 @@
 package com.helloworld;
 
+import android.app.ActivityManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.util.Log;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
@@ -13,6 +18,8 @@ import expo.modules.ReactActivityDelegateWrapper;
 
 public class MainActivity extends ReactActivity {
 
+
+
   /**
    * Returns the name of the main component registered from JavaScript. This is used to schedule
    * rendering of the component.
@@ -21,6 +28,7 @@ public class MainActivity extends ReactActivity {
   protected String getMainComponentName() {
     return "HelloWorld";
   }
+
 
   /**
    * Returns the instance of the {@link ReactActivityDelegate}. There the RootView is created and
@@ -34,10 +42,17 @@ public class MainActivity extends ReactActivity {
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
+
     RNBootSplash.init(this);            // <- initialize the splash screen
     super.onCreate(null);
     // or super.onCreate(savedInstanceState) when not using react-native-screens
-    startService(new Intent(MainActivity.this, CoreService.class));
+    if(!this.isMyServiceRunning(CoreService.class)){
+      Log.d("MainActivity", "start service");
+      startService(new Intent(MainActivity.this, CoreService.class));
+    }else {
+      Log.d("MainActivity", "service exist");
+    };
+
   }
 
   public static class MainActivityDelegate extends ReactActivityDelegate {
@@ -60,4 +75,15 @@ public class MainActivity extends ReactActivity {
       return BuildConfig.IS_NEW_ARCHITECTURE_ENABLED;
     }
   }
+
+  private boolean isMyServiceRunning(Class<?> serviceClass) {
+    ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+    for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+      if (serviceClass.getName().equals(service.service.getClassName())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 }

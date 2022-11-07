@@ -10,12 +10,13 @@ import { useStores } from "../models"
 
 export const CreateIdentityScreen: FC<StackScreenProps<AppStackScreenProps, "CreateIdentity">> = observer(function CreateIdentityScreen() {
   // Pull in one of our MST stores
-  const { identity: {name, newIdentity, setName} } = useStores()
+  const { chatStore: {newContact:{name, setName}}, identity: {newIdentity} } = useStores()
 
   // Pull in navigation via hook
   // const navigation = useNavigation()
   const handleNewIdentity = () => {
     newIdentity(name)
+    setName("")
   }
 
   return (

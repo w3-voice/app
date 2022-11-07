@@ -6,7 +6,7 @@ import { IdentityModel } from "./Identity"
  * A RootStore model.
  */
 export const RootStoreModel = types.model("RootStore").props({
-  identity: types.optional(IdentityModel, {_id:null ,isLoggedIn:false}),
+  identity: types.optional(IdentityModel, {user:null ,isLoggedIn:false}),
   chatStore: types.optional(ChatStoreModel, {newContact:{name:"", _id:""}})
 })
 

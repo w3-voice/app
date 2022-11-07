@@ -1,5 +1,6 @@
 import { Instance, SnapshotIn, SnapshotOut, types } from "mobx-state-tree"
 import { ContactModel } from "./Contact"
+import { IdentityModel } from "./Identity"
 
 /**
  * Model description here for TypeScript hints.

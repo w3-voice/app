@@ -4,7 +4,7 @@
 import {
   BeeCoreInstance,
   create
-} from "./mock"
+} from "./real"
 // import Config from "../../config"
 
 

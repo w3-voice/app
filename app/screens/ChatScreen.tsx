@@ -22,10 +22,7 @@ export const ChatScreen: FC<StackScreenProps<AppStackScreenProps, "ChatNavigator
       onSend={messages => {
         messages.map(msg=>send(msg))
       }}
-      user={{
-        _id: identity._id,
-        name: identity.name
-      }}
+      user={identity.user}
     />
   )
 })

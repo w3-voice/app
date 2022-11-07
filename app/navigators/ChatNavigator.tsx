@@ -5,6 +5,9 @@ import {
   ChatListScreen,
   ChatScreen
 } from "../screens"
+import {
+  PaperHeader
+} from "../components/PaperHeader"
 import { AppStackParamList, AppStackScreenProps } from "./AppNavigator"
 import { NewChatScreen } from "../screens/NewChatScreen"
 import { NewContactScreen } from "../screens/NewContactScreen"
@@ -18,15 +21,22 @@ export type ChatNavigatorParamList = {
   NewChat: undefined,
   NewContact: undefined,
 }
-
 const Stack = createStackNavigator<ChatNavigatorParamList>()
 export const ChatNavigator = () => {
   return (
-    <Stack.Navigator screenOptions={{ cardStyle: { backgroundColor: "transparent" }, headerShown: false, }}>
-          <Stack.Screen name="ChatList" component={ChatListScreen} />
-          <Stack.Screen name="Chat" component={ChatScreen} />
-          <Stack.Screen name="NewChat" component={NewChatScreen} />
-          <Stack.Screen name="NewContact" component={NewContactScreen} />
+    <Stack.Navigator screenOptions={{
+      cardStyle: { backgroundColor: "transparent" },
+      headerShown: true,
+      header:(props)=> <PaperHeader {...props}/>
+    }}>
+      <Stack.Screen name="ChatList"
+        component={ChatListScreen}
+        options={{ title: 'Hood' }}
+
+      />
+      <Stack.Screen name="Chat" component={ChatScreen} />
+      <Stack.Screen name="NewChat" component={NewChatScreen} />
+      <Stack.Screen name="NewContact" component={NewContactScreen} />
     </Stack.Navigator>
   )
 }

@@ -1,5 +1,6 @@
 import { Instance, SnapshotIn, SnapshotOut, types, flow } from "mobx-state-tree"
 import { api } from "../services/core"
+import { ContactModel } from "./Contact"
 
 /**
  * Model description here for TypeScript hints.
@@ -7,34 +8,36 @@ import { api } from "../services/core"
 export const IdentityModel = types
   .model("Identity")
   .props({
-    _id: types.maybeNull(types.string),
-    name: types.maybe(types.string),
+    user: types.maybeNull(ContactModel),
     isLoggedIn: types.boolean
   })
   .views((self) => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions((self) => {
     const newIdentity = flow(function* newIdentity(name: string){
       let idObj = yield api.beeCore.newIdentity(name)
-      self._id = idObj._id
-      self.name = idObj.name
+      self.user = {_id :idObj._id, name: idObj.name}
       self.isLoggedIn = true
     })
     const loadIdentity = flow(function* load(){
+    try {
       let hasId = yield api.beeCore.hasIdentity()
       if (!hasId) {
-        self._id = null
-        self.name = null
+        self.user = null
         self.isLoggedIn = false
       }
       else {
         let idObj = yield api.beeCore.getIdentity()
-        self._id = idObj._id
-        self.name = idObj.name
+        console.log("identity:", idObj)
+        self.user = {_id :idObj._id, name: idObj.name}
         self.isLoggedIn = true
       }
+    } catch (error) {
+      console.log(error)
+    }
+
     }) 
     const setName = (name)=>{
-      self.name = name
+      self.user.name = name
     }
     return {
       loadIdentity,
