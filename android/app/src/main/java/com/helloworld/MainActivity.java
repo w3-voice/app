@@ -1,12 +1,9 @@
 package com.helloworld;
 
 import android.app.ActivityManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.util.Log;
 
 import com.facebook.react.ReactActivity;
@@ -15,6 +12,8 @@ import com.facebook.react.ReactRootView;
 import com.zoontek.rnbootsplash.RNBootSplash;
 
 import expo.modules.ReactActivityDelegateWrapper;
+import fx.android.core.CoreService;
+
 
 public class MainActivity extends ReactActivity {
 
@@ -45,14 +44,9 @@ public class MainActivity extends ReactActivity {
 
     RNBootSplash.init(this);            // <- initialize the splash screen
     super.onCreate(null);
+    startService(new Intent(MainActivity.this, CoreService.class));
+    Log.d("MainActivity", "start service");
     // or super.onCreate(savedInstanceState) when not using react-native-screens
-    if(!this.isMyServiceRunning(CoreService.class)){
-      Log.d("MainActivity", "start service");
-      startService(new Intent(MainActivity.this, CoreService.class));
-    }else {
-      Log.d("MainActivity", "service exist");
-    };
-
   }
 
   public static class MainActivityDelegate extends ReactActivityDelegate {

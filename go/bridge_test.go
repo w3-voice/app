@@ -7,9 +7,11 @@ import (
 )
 
 func TestGetChats(t *testing.T) {
-	br, err := NewBridge(t.TempDir())
+	conf := NewHostConfig()
+	br, err := NewBridge(t.TempDir(),conf)
 	require.NoError(t, err)
 
 	br.core.SignUp("farhoud")
 	require.Equal(t, br.core.IsLogin(), true)
+	select{}
 }

@@ -5,16 +5,33 @@ const { CoreModule } = NativeModules;
 import 'fastestsmallesttextencoderdecoder';
 import { Buffer } from 'buffer';
 
-class MockBeeCore implements BeeCore {
+class RNBeeCore implements BeeCore {
+    ready = false
 
     constructor() {
-        CoreModule.startBind();
+
+    }
+
+    async bindService(): Promise<boolean> {
+        return new Promise((res, rej)=>{
+            try{
+                CoreModule.startBind((val)=>{
+                    this.ready = val
+                    res(val)
+                });
+            }catch(e){
+                rej(e)
+            }
+
+        })
     }
 
     async getIdentity(): Promise<Identity> {
         try {
+            console.log("get identity called")
             const res = await CoreModule.getIdentity()
             const id: Identity = base64ToObject(res)
+            console.log("get identity result",id)
             return id
         } catch (error) {
             throw error
@@ -73,16 +90,17 @@ class MockBeeCore implements BeeCore {
         try {
             const res = await CoreModule.getMessages(chatId)
             const msgs:Message[] = base64ToObject(res)
-            return msgs
+            return msgs.map((m)=> ({...m,createdAt:convertUnixTimeToLocalDate(m.createdAt)}))
         } catch (error) {
             throw error
         } 
     }
     async sendChatMessage(chatId: string, msg: Message): Promise<Message> {
         try {
+            console.log("call send chat")
             const res = await CoreModule.sendMessage(chatId, msg.text)
             const ms:Message = base64ToObject(res)
-            return ms
+            return {...ms,createdAt:convertUnixTimeToLocalDate(ms.createdAt)}
         } catch (error) {
             throw error
         } 
@@ -121,5 +139,17 @@ export const objectToBase64String = (obj: object): string => {
 
 
 export const create = () => {
-    return new MockBeeCore()
+    return new RNBeeCore()
+}
+
+function convertUnixTimeToLocalDate(unixDate) {
+    let date = new Date(unixDate*1000)
+    // let newDate = new Date(date.getTime()+date.getTimezoneOffset()*60*1000);
+
+    // let offset = date.getTimezoneOffset() / 60;
+    // let hours = date.getHours();
+
+    // newDate.setHours(hours - offset);
+
+    return date;   
 }

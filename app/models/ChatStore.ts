@@ -18,7 +18,11 @@ export const ChatStoreModel = types
     contacts: types.array(ContactModel),
     newContact: NewContactModel
   })
-  .views((self) => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
+  .views((self) => ({
+     get sortedMessages(){
+      return self.messages.slice().sort((a,b)=> b.createdAt - a.createdAt)
+    }
+  })) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions((self) => {
     const loadContact = flow(function* loadContact(){
       const list = yield api.beeCore.getContactList()
@@ -94,7 +98,7 @@ export const ChatStoreModel = types
       console.log(list)
       self.chats.replace(list)
     })
-    const selectChat = flow(function* load(chatId: string){
+    const selectChat = flow(function* selectChat(chatId: string){
       console.log(chatId)
       console.log(self.chats.slice())
       const chat = self.chats.find((item)=>item._id === chatId)
@@ -104,23 +108,18 @@ export const ChatStoreModel = types
       console.log(messages)
       self.messages.replace(messages)
     })
-    const send = (msg: Message)=>{
+    const send = flow(function* selectChat(msg: Message){
       console.log("send message", msg)
       console.log("selected contact", self.selected)
-      api.beeCore.sendChatMessage(self.selected._id, {
+      let rmsg: Message = yield api.beeCore.sendChatMessage(self.selected._id, {
         _id: msg._id,
         createdAt: msg.createdAt,
         user: msg.user._id,
         text: msg.text
       })
-      console.log(msg)
-      self.messages.push({
-        _id: msg._id,
-        createdAt: msg.createdAt,
-        user: msg.user._id,
-        text: msg.text
-      })
-    }
+      console.log(rmsg)
+      self.messages.push(rmsg)
+    })
     const clear = ()=>{
       self.selected = null
       self.messages.replace([])

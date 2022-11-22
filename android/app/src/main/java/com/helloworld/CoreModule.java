@@ -1,14 +1,14 @@
 package com.helloworld;
 
-import android.app.Activity;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.os.Handler;
+
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.os.SystemClock;
+
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -18,21 +18,21 @@ import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.module.annotations.ReactModule;
 
-import java.lang.reflect.*;
+import java.util.Objects;
+
+import fx.android.core.CoreService;
+import fx.android.core.ICoreService;
 
 
 @ReactModule(name = CoreModule.NAME)
 public class CoreModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
     public static final String NAME = "CoreModule";
     ICoreService cService = null;
+    Callback callBack = null;
     boolean cBound = false;
-
-//    private void invoke(String name){
-//        Method method = cService.getClass().getMethod(name,);
-//    }
-
 
     public CoreModule(ReactApplicationContext reactContext) throws Exception {
         super(reactContext);
@@ -45,18 +45,16 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
     }
 
 
-    @ReactMethod(isBlockingSynchronousMethod = true)
-    public void startBind() {
+    @ReactMethod
+    public void startBind(Callback cb) {
         Intent intent = new Intent(getCurrentActivity(), CoreService.class);
-        getCurrentActivity().bindService(intent, connection, Context.BIND_AUTO_CREATE);
+        Objects.requireNonNull(getCurrentActivity()).bindService(intent, connection, Context.BIND_AUTO_CREATE);
+        callBack = cb;
         Log.d(CoreModule.NAME, "client start bind");
     }
 
     @ReactMethod
     public void hasIdentity(Promise promise) {
-        while (!cBound) {
-            SystemClock.sleep(500);
-        }
         try {
             promise.resolve(cService.isLogin());
         } catch (Exception e) {
@@ -169,8 +167,6 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
     public void sendMessage(String chatID, String text,Promise promise) {
         try{
             String res = cService.sendMessage(chatID, text);
-
-            promise.reject(new Error("failed to send message"));
             promise.resolve(res);
         }catch (Exception e){
             promise.reject(e);
@@ -226,15 +222,23 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
         @Override
         public void onServiceConnected(ComponentName className, IBinder service) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
+            Log.d(className.getClassName(), "bind connected");
             cService = ICoreService.Stub.asInterface(service);
+            callBack.invoke(true);
+            callBack = null;
             Log.d(CoreModule.NAME, "client connected to service");
             cBound = true;
         }
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
+            if (callBack != null){
+                callBack.invoke(false);
+            }
             cBound = false;
+            Log.d(arg0.getClassName(), "client disconnected");
         }
+
     };
 
 }

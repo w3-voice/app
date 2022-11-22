@@ -1,11 +1,12 @@
 export interface BeeCoreInstance {
+  bindService(): Promise<boolean>
   getIdentity(): Promise<Identity>
   hasIdentity(): Promise<boolean>
   newIdentity(name: string): Promise<Identity>
   getChat(chatId: ID): Promise<Chat>
   getChatList(): Promise<Chat[]>
   getChatMessages(id: string): Promise<Message[]>
-  sendChatMessage(chatId: ID, msg: Message): void
+  sendChatMessage(chatId: ID, msg: Message): Promise<Message>
   submitIncomingMessages(handler: (chatId: ID, msg: Message)=>void): void
   getContactList(): Promise<Contact[]>
   newContact(contact: Contact): Promise<void>

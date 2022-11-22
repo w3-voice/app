@@ -37,7 +37,7 @@
       </activity>
         <service
             android:exported="true"
-            android:name=".CoreService"
+            android:name="fx.android.core.CoreService"
             android:process=":coreProcess"
             android:enabled="true" />
     </application>

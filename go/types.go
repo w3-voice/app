@@ -3,7 +3,6 @@ package bridge
 import (
 	"encoding/base64"
 	"encoding/json"
-	"time"
 )
 
 type Identity struct {
@@ -20,7 +19,7 @@ type Chat struct {
 type Message struct {
 	ID string `json:"_id"`
 	Text string `json:"text"`
-	CreatedAt time.Time `json:"createdAt"`
+	CreatedAt int64 `json:"createdAt"`
 	ContactID string `json:"user"`
 	Sent bool `json:"sent"`
 	Received bool `json:"received"`
