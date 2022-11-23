@@ -24,8 +24,7 @@ public class CoreService extends Service {
     String appDir;
     String storeDirPath;
     String path;
-    final RemoteCallbackList<ICoreServiceCallback> mCallbacks
-            = new RemoteCallbackList<ICoreServiceCallback>();
+    final Broadcaster mCallbacks = new Broadcaster();
 
     int mValue = 0;
     /**
@@ -40,19 +39,7 @@ public class CoreService extends Service {
         stopSelf();
     }
 
-    private void broadcastMessageStatus(String id, String status) {
-        // Broadcast to all clients the new value.
-        final int N = mCallbacks.beginBroadcast();
-        for (int i=0; i<N; i++) {
-            try {
-                mCallbacks.getBroadcastItem(i).msgChanged(id, status);
-            } catch (RemoteException e) {
-                // The RemoteCallbackList will take care of removing
-                // the dead object for us.
-            }
-        }
-        mCallbacks.finishBroadcast();
-    }
+
 
     public class LocalBinder extends Binder {
         CoreService getService() {
@@ -83,6 +70,7 @@ public class CoreService extends Service {
                 NetDriver inet = new NetDriver();
                 hostConfig.setNetDriver(inet);
             }
+            hostConfig.setBroadCaster(mCallbacks);
             this.core = Bridge.newBridge(path, hostConfig);
             String s1 = this.core.getInterfaces();
             Log.d(NAME, "driver" + s1);
@@ -164,7 +152,6 @@ public class CoreService extends Service {
         public String getChats() throws RemoteException {
             try {
                 Log.d(NAME, core.getChats());
-                broadcastMessageStatus("1","new");
                 return core.getChats();
             } catch (Exception e) {
                 Log.e(NAME, "can not retrieve chat list", e);

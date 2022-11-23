@@ -2,7 +2,6 @@ package bridge
 
 import (
 	"context"
-	"net"
 	"strings"
 
 	"github.com/hood-chat/core"
@@ -20,22 +19,17 @@ type Bridge struct {
 }
 
 func NewBridge(repoPath string, conf *HostConfig) (*Bridge, error) {
-	net.DefaultResolver = &DefaultResolver
-
-	rslvOpt := madns.WithDefaultResolver(&DefaultResolver)
-	maRslv, err := madns.NewResolver(rslvOpt)
-	if err != nil {
-		panic(err)
+	if conf.broadCaster != nil {
+		SetBroadCast(conf.broadCaster)
 	}
-	madns.DefaultResolver = maRslv
-
 	hb := NewMobileHost(conf)
 	if hb == nil {
 		panic("new hb failed")
 	}
 
 	m := core.MessengerBuilder(repoPath, Option(), hb)
-	f := &Bridge{core: m}
+
+	f := &Bridge{m}
 
 	return f, nil
 }
@@ -62,11 +56,13 @@ func (b *Bridge) GetInterfaces() (string, error) {
 	for _, val := range adders {
 		sAdders = append(sAdders, val.String())
 	}
+	getBroadCast().BroadCast(NewEvent("9999", "new event"))
 	return strings.Join(sAdders, " , "), err
 
 }
 
 func (b *Bridge) GetIdentity() (string, error) {
+	getBroadCast().BroadCast(NewEvent("9999", "new event"))
 	id, err := b.core.GetIdentity()
 	if err != nil {
 		return "", err
@@ -170,7 +166,7 @@ func (b *Bridge) GetContacts() (string, error) {
 	}
 	res := make([]Contact, 0)
 	for _, c := range cs {
-		res = append(res, Contact{c.ID.String(),c.Name})
+		res = append(res, Contact{c.ID.String(), c.Name})
 	}
 	return Marshal(res)
 }
@@ -182,7 +178,7 @@ func (b *Bridge) GetContact(id string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return Marshal(Contact{c.ID.String(),c.Name})
+	return Marshal(Contact{c.ID.String(), c.Name})
 }
 
 func (b *Bridge) AddContact(id string, name string) error {

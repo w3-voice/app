@@ -12,6 +12,7 @@ func main() {
 	// }
 	conf := bridge.NewHostConfig()
 	br, err := bridge.NewBridge("./", conf)
+	br.GetInterfaces()
 	if err != nil {
 		panic("can not continue")
 	}

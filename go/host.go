@@ -47,16 +47,22 @@ func NewMobileHost(conf *HostConfig) core.HostBuilder {
 	if conf == nil {
 		conf = NewHostConfig()
 	}
-	net.DefaultResolver = &DefaultResolver
 
 	// Set up netdriver.
 	if conf.netDriver != nil {
+		net.DefaultResolver = &DefaultResolver
+		rslvOpt := madns.WithDefaultResolver(&DefaultResolver)
+		maRslv, err := madns.NewResolver(rslvOpt)
+		if err != nil {
+			panic(err)
+		}
+		madns.DefaultResolver = maRslv
 		inet := &inet{
 			net: conf.netDriver,
 		}
 		utils.SetNetDriver(inet)
 		manet.SetNetInterface(inet)
-		err := logging.SetLogLevelRegex(".*", "DEBUG")
+		err = logging.SetLogLevelRegex(".*", "DEBUG")
 		if err != nil {
 			panic("logger failed")
 		}
