@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.util.Log;
 import android.widget.Toast;
@@ -23,11 +24,36 @@ public class CoreService extends Service {
     String appDir;
     String storeDirPath;
     String path;
+    final RemoteCallbackList<ICoreServiceCallback> mCallbacks
+            = new RemoteCallbackList<ICoreServiceCallback>();
+
+    int mValue = 0;
     /**
      * Class for clients to access.  Because we know this service always
      * runs in the same process as its clients, we don't need to deal with
      * IPC.
      */
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        Log.i("IsolatedService", "Task removed in " + this + ": " + rootIntent);
+        stopSelf();
+    }
+
+    private void broadcastMessageStatus(String id, String status) {
+        // Broadcast to all clients the new value.
+        final int N = mCallbacks.beginBroadcast();
+        for (int i=0; i<N; i++) {
+            try {
+                mCallbacks.getBroadcastItem(i).msgChanged(id, status);
+            } catch (RemoteException e) {
+                // The RemoteCallbackList will take care of removing
+                // the dead object for us.
+            }
+        }
+        mCallbacks.finishBroadcast();
+    }
+
     public class LocalBinder extends Binder {
         CoreService getService() {
             return CoreService.this;
@@ -108,6 +134,12 @@ public class CoreService extends Service {
     private final IBinder mBinder = new LocalBinder();
 
     private final ICoreService.Stub binder = new ICoreService.Stub() {
+        public void registerCallback(ICoreServiceCallback cb) {
+            if (cb != null) mCallbacks.register(cb);
+        }
+        public void unregisterCallback(ICoreServiceCallback cb) {
+            if (cb != null) mCallbacks.unregister(cb);
+        }
 
         public boolean addContact(String id, String name) throws RemoteException {
             try {
@@ -132,6 +164,7 @@ public class CoreService extends Service {
         public String getChats() throws RemoteException {
             try {
                 Log.d(NAME, core.getChats());
+                broadcastMessageStatus("1","new");
                 return core.getChats();
             } catch (Exception e) {
                 Log.e(NAME, "can not retrieve chat list", e);

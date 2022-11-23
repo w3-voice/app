@@ -1,6 +1,8 @@
 // ICoreService.aidl
 package fx.android.core;
 
+import fx.android.core.ICoreServiceCallback;
+
 // Declare any non-default types here with import statements
 
 
@@ -55,6 +57,18 @@ interface ICoreService {
     * Send a text Message
     */
     String sendMessage(String chatID, String text);
+
+        /**
+         * Often you want to allow a service to call back to its clients.
+         * This shows how to do so, by registering a callback interface with
+         * the service.
+         */
+    oneway void registerCallback(ICoreServiceCallback cb);
+
+        /**
+         * Remove a previously registered callback interface.
+         */
+    oneway void unregisterCallback(ICoreServiceCallback cb);
 
 
 }

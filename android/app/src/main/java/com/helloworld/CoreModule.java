@@ -6,25 +6,34 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.RemoteException;
 
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.module.annotations.ReactModule;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.Arguments;
 
+import java.lang.ref.WeakReference;
 import java.util.Objects;
 
 import fx.android.core.CoreService;
 import fx.android.core.ICoreService;
+import fx.android.core.ICoreServiceCallback;
 
 
 @ReactModule(name = CoreModule.NAME)
@@ -33,9 +42,11 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
     ICoreService cService = null;
     Callback callBack = null;
     boolean cBound = false;
-
+    ReactApplicationContext context = null;
+    private InternalHandler mHandler;
     public CoreModule(ReactApplicationContext reactContext) throws Exception {
         super(reactContext);
+        context = reactContext;
     }
 
     @Override
@@ -44,9 +55,27 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
         return NAME;
     }
 
+    private void sendEvent(ReactContext reactContext,
+                           String eventName,
+                           @Nullable WritableMap params) {
+        reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit(eventName, params);
+    }
+    @ReactMethod
+    public void addListener(String eventName) {
+        // Set up any upstream listeners or background tasks as necessary
+    }
+
+    @ReactMethod
+    public void removeListeners(Integer count) {
+        // Remove upstream listeners, stop unnecessary background tasks
+    }
+
 
     @ReactMethod
     public void startBind(Callback cb) {
+        mHandler = new InternalHandler(this);
         Intent intent = new Intent(getCurrentActivity(), CoreService.class);
         Objects.requireNonNull(getCurrentActivity()).bindService(intent, connection, Context.BIND_AUTO_CREATE);
         callBack = cb;
@@ -223,7 +252,13 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
         public void onServiceConnected(ComponentName className, IBinder service) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             Log.d(className.getClassName(), "bind connected");
-            cService = ICoreService.Stub.asInterface(service);
+            cService = (ICoreService) ICoreService.Stub.asInterface(service);
+
+            try {
+                cService.registerCallback(mCallback);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
             callBack.invoke(true);
             callBack = null;
             Log.d(CoreModule.NAME, "client connected to service");
@@ -240,5 +275,52 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
         }
 
     };
+
+    private ICoreServiceCallback mCallback = new ICoreServiceCallback.Stub() {
+        /**
+         * This is called by the remote service regularly to tell us about
+         * new values.  Note that IPC calls are dispatched through a thread
+         * pool running in each process, so the code executing here will
+         * NOT be running in our main thread like most other things -- so,
+         * to update the UI, we need to use a Handler to hop over there.
+         */
+        public void msgChanged(String msgID, String status) throws RemoteException {
+            Log.d(NAME, "message " + msgID + "change status" + status);
+            MessageStatusEvent evt = new MessageStatusEvent();
+            evt.msgID=msgID;
+            evt.status=status;
+            Message msg = new Message();
+            msg.obj=evt;
+            msg.what=EVT;
+            mHandler.handleMessage(msg);
+
+        }
+    };
+    private static final int EVT=0;
+    private static class InternalHandler extends Handler {
+
+        private final WeakReference<CoreModule> weakCoreModule;
+
+        InternalHandler(CoreModule coreModule) {
+            weakCoreModule = new WeakReference<>(coreModule);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.what == EVT) {
+                CoreModule coreModule = weakCoreModule.get();
+                if (coreModule != null) {
+                    MessageStatusEvent object = (MessageStatusEvent) msg.obj;
+                    WritableMap params = Arguments.createMap();
+                    params.putString("msgID", object.msgID);
+                    params.putString("status", object.status);
+                    coreModule.sendEvent(coreModule.context, "MESSAGING", params);
+                }
+            } else {
+                super.handleMessage(msg);
+            }
+        }
+    }
+
 
 }

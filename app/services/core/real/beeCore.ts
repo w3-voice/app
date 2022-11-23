@@ -1,12 +1,13 @@
 import { BeeCore, Identity } from "../core.types";
 import { Chat, Contact, ID, Message } from "./beeCore.type";
-import { NativeModules } from 'react-native';
+import { NativeEventEmitter, NativeModules } from 'react-native';
 const { CoreModule } = NativeModules;
 import 'fastestsmallesttextencoderdecoder';
 import { Buffer } from 'buffer';
 
 class RNBeeCore implements BeeCore {
     ready = false
+    eventListener = null
 
     constructor() {
 
@@ -18,6 +19,10 @@ class RNBeeCore implements BeeCore {
                 CoreModule.startBind((val)=>{
                     this.ready = val
                     res(val)
+                    const eventEmitter = new NativeEventEmitter(NativeModules.ToastExample);
+                    this.eventListener = eventEmitter.addListener('MESSAGING', (event) => {
+                       console.log(event) // "someValue"
+                    });
                 });
             }catch(e){
                 rej(e)
