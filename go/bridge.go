@@ -72,7 +72,7 @@ func (b *Bridge) GetIdentity() (string, error) {
 		return "", err
 	}
 	return Marshal(Identity{
-		ID:   id.ID,
+		ID:   id.ID.String(),
 		Name: id.Name,
 	})
 }
@@ -83,23 +83,24 @@ func (b *Bridge) NewIdentity(name string) (string, error) {
 		return "", err
 	}
 	return Marshal(Identity{
-		ID:   id.ID,
+		ID:   id.ID.String(),
 		Name: id.Name,
 	})
 }
 
 func (b *Bridge) GetChat(id string) (string, error) {
+	chatId := entity.ID(id)
 	msgr := b.core
-	ch, err := msgr.GetChat(id)
+	ch, err := msgr.GetChat(chatId)
 	if err != nil {
 		return "", err
 	}
 	mids := []string{}
 	for _, m := range ch.Members {
-		mids = append(mids, m.ID)
+		mids = append(mids, m.ID.String())
 	}
 	return Marshal(Chat{
-		ID:      ch.ID,
+		ID:      ch.ID.String(),
 		Name:    ch.Name,
 		Members: mids,
 	})
@@ -116,10 +117,10 @@ func (b *Bridge) GetChats() (string, error) {
 	for _, c := range ch {
 		mids := []string{}
 		for _, m := range c.Members {
-			mids = append(mids, m.ID)
+			mids = append(mids, m.ID.String())
 		}
 		chs = append(chs, Chat{
-			ID:      c.ID,
+			ID:      c.ID.String(),
 			Name:    c.Name,
 			Members: mids,
 		})
@@ -129,20 +130,21 @@ func (b *Bridge) GetChats() (string, error) {
 }
 
 func (b *Bridge) GetMessages(chatID string) (string, error) {
+	id := entity.ID(chatID)
 	msgr := b.core
 	res := make([]Message, 0)
 
-	msgs, err := msgr.GetMessages(chatID)
+	msgs, err := msgr.GetMessages(id)
 	if err != nil {
 		return "", err
 	}
 
 	for _, msg := range msgs {
 		res = append(res, Message{
-			ID:        msg.ID,
+			ID:        msg.ID.String(),
 			Text:      msg.Text,
 			CreatedAt: msg.CreatedAt.Unix(),
-			ContactID: msg.Author.ID,
+			ContactID: msg.Author.ID.String(),
 			Sent:      msg.Status != entity.Pending,
 			Received:  msg.Status == entity.Seen,
 			Pending:   msg.Status == entity.Pending,
@@ -153,19 +155,11 @@ func (b *Bridge) GetMessages(chatID string) (string, error) {
 
 func (b *Bridge) SendMessage(chatId string, text string) (string, error) {
 	msgr := b.core
-	enp, err := msgr.NewMessage(chatId, text)
+	msg, err := msgr.SendPM(entity.ID(chatId), text)
 	if err != nil {
 		return "", err
 	}
-	return Marshal(Message{
-		ID:        enp.Msg.ID,
-		Text:      enp.Msg.Text,
-		CreatedAt: enp.Msg.CreatedAt.Unix(),
-		ContactID: enp.Msg.Author.ID,
-		Sent:      enp.Msg.Status != entity.Pending,
-		Received:  enp.Msg.Status == entity.Seen,
-		Pending:   enp.Msg.Status == entity.Pending,
-	})
+	return Marshal(msg)
 }
 
 func (b *Bridge) GetContacts() (string, error) {
@@ -176,32 +170,34 @@ func (b *Bridge) GetContacts() (string, error) {
 	}
 	res := make([]Contact, 0)
 	for _, c := range cs {
-		res = append(res, Contact(c))
+		res = append(res, Contact{c.ID.String(),c.Name})
 	}
 	return Marshal(res)
 }
 
 func (b *Bridge) GetContact(id string) (string, error) {
+	contactID := entity.ID(id)
 	msgr := b.core
-	c, err := msgr.GetContact(id)
+	c, err := msgr.GetContact(contactID)
 	if err != nil {
 		return "", err
 	}
-	return Marshal(Contact(c))
+	return Marshal(Contact{c.ID.String(),c.Name})
 }
 
 func (b *Bridge) AddContact(id string, name string) error {
 	msgr := b.core
 	err := msgr.AddContact(entity.Contact{
-		ID:   id,
+		ID:   entity.ID(id),
 		Name: name,
 	})
 	return err
 }
 
 func (b Bridge) NewPMChat(contactID string) (string, error) {
+	id := entity.ID(contactID)
 	msgr := b.core
-	pm, err := msgr.CreatePMChat(contactID)
+	pm, err := msgr.CreatePMChat(id)
 	if err != nil {
 		return "", err
 	}
@@ -210,8 +206,9 @@ func (b Bridge) NewPMChat(contactID string) (string, error) {
 }
 
 func (b Bridge) GetPMChat(contactID string) (string, error) {
+	id := entity.ID(contactID)
 	msgr := b.core
-	pm, err := msgr.GetPMChat(contactID)
+	pm, err := msgr.GetPMChat(id)
 	if err != nil {
 		return "", err
 	}
@@ -221,10 +218,10 @@ func (b Bridge) GetPMChat(contactID string) (string, error) {
 func toChat(ch entity.ChatInfo) Chat {
 	mids := []string{}
 	for _, m := range ch.Members {
-		mids = append(mids, m.ID)
+		mids = append(mids, m.ID.String())
 	}
 	return Chat{
-		ID:      ch.ID,
+		ID:      ch.ID.String(),
 		Name:    ch.Name,
 		Members: mids,
 	}
