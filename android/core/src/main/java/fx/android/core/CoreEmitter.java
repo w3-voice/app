@@ -3,10 +3,10 @@ import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.util.Log;
 
-import bridge.BroadCaster;
+import bridge.Emitter;
 import bridge.Event;
 
-public class Broadcaster implements BroadCaster {
+public class CoreEmitter implements Emitter {
     final RemoteCallbackList<ICoreServiceCallback> mCallbacks
             = new RemoteCallbackList<ICoreServiceCallback>();
 
