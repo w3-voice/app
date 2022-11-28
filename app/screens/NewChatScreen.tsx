@@ -18,7 +18,6 @@ export const NewChatScreen: FC<StackScreenProps<AppStackScreenProps, "NewChat">>
 
  const renderItem = ({ item }) => (
    <ListItem onPress={() => {
-    console.log("contactID",item._id)
     openPMChat(item._id).then(()=>{
       navigation.navigate("Chat")
     })

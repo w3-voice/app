@@ -7,33 +7,38 @@ import bridge.Emitter;
 import bridge.Event;
 
 public class CoreEmitter implements Emitter {
-    final RemoteCallbackList<ICoreServiceCallback> mCallbacks
-            = new RemoteCallbackList<ICoreServiceCallback>();
+    final RemoteCallbackList<IListener> listeners
+            = new RemoteCallbackList<IListener>();
 
-    public void register(ICoreServiceCallback cb) {
-        mCallbacks.register(cb);
+    public void addListener(IListener cb) {
+        listeners.register(cb);
     }
-    public void unregister(ICoreServiceCallback cb) {
-        mCallbacks.unregister(cb);
+    public void removeListener(IListener cb) {
+        listeners.unregister(cb);
     }
 
     @Override
-    public void broadCast(Event event) {
-        Log.d("Broadcaster", "broadCast: "+event.getMsgID());
-        broadcastMessageStatus(event.getMsgID(), event.getStatus());
+    public void emit(Event event) {
+        Log.d("Broadcaster", "broadCast: "+event);
+        IEvent evt = new IEvent();
+        evt.action = event.getAction();
+        evt.group = event.getGroup();
+        evt.name = event.getName();
+        evt.payload = event.getPayload();
+        broadcastEvent(evt);
     }
 
-    private void broadcastMessageStatus(String id, String status) {
+    private void broadcastEvent(IEvent evt) {
         // Broadcast to all clients the new value.
-        final int N = mCallbacks.beginBroadcast();
+        final int N = listeners.beginBroadcast();
         for (int i=0; i<N; i++) {
             try {
-                mCallbacks.getBroadcastItem(i).msgChanged(id, status);
+                listeners.getBroadcastItem(i).emit(evt);
             } catch (RemoteException e) {
                 // The RemoteCallbackList will take care of removing
                 // the dead object for us.
             }
         }
-        mCallbacks.finishBroadcast();
+        listeners.finishBroadcast();
     }
 }

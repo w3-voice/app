@@ -74,7 +74,6 @@ class MockBeeCore implements BeeCore {
         })
     }
     sendChatMessage(chatId: string, msg: Message): void {
-        console.log("called")
         this.messagesMap[chatId].push(msg)
     }
     submitIncomingMessages(handler: (chatId: string, msg: Message) => void): void { 
@@ -98,7 +97,6 @@ class MockBeeCore implements BeeCore {
 }
 
 const generatePMId = (members: Contact[]) => {
-    console.log(members)
     return members
         .map(m => m._id)
         .sort()

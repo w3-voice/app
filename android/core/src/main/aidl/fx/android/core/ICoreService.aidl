@@ -1,7 +1,7 @@
 // ICoreService.aidl
 package fx.android.core;
 
-import fx.android.core.ICoreServiceCallback;
+import fx.android.core.IListener;
 
 // Declare any non-default types here with import statements
 
@@ -42,6 +42,10 @@ interface ICoreService {
     */
     String getMessages(String id);
     /**
+    * get message by id
+    */
+    String getMessage(String id);
+    /**
     * return true if user is already generate identity
     */
     boolean isLogin();
@@ -63,12 +67,12 @@ interface ICoreService {
          * This shows how to do so, by registering a callback interface with
          * the service.
          */
-    oneway void registerCallback(ICoreServiceCallback cb);
+    oneway void registerListener(IListener cb);
 
         /**
          * Remove a previously registered callback interface.
          */
-    oneway void unregisterCallback(ICoreServiceCallback cb);
+    oneway void unregisterListener(IListener cb);
 
 
 }

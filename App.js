@@ -8,7 +8,6 @@ import * as SplashScreen from "expo-splash-screen"
 SplashScreen.preventAutoHideAsync()
 
 function IgniteApp() {
-  console.log("app created")
   return <App hideSplashScreen={SplashScreen.hideAsync} />
 }
 

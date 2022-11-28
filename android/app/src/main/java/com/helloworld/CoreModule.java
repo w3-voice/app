@@ -33,7 +33,8 @@ import java.util.Objects;
 
 import fx.android.core.CoreService;
 import fx.android.core.ICoreService;
-import fx.android.core.ICoreServiceCallback;
+import fx.android.core.IListener;
+import fx.android.core.IEvent;
 
 
 @ReactModule(name = CoreModule.NAME)
@@ -193,6 +194,20 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
     }
 
     @ReactMethod
+    public void getMessage(String id,Promise promise) {
+        try{
+            String res = cService.getMessage(id);
+            if(res == null) {
+                promise.reject(new Error("failed to get messages"));
+            } else {
+                promise.resolve(res);
+            };
+        }catch (Exception e){
+            promise.reject(e);
+        }
+    }
+
+    @ReactMethod
     public void sendMessage(String chatID, String text,Promise promise) {
         try{
             String res = cService.sendMessage(chatID, text);
@@ -255,7 +270,7 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
             cService = (ICoreService) ICoreService.Stub.asInterface(service);
 
             try {
-                cService.registerCallback(mCallback);
+                cService.registerListener(mlistener);
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
@@ -276,7 +291,7 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
 
     };
 
-    private ICoreServiceCallback mCallback = new ICoreServiceCallback.Stub() {
+    private final IListener mlistener = new IListener.Stub() {
         /**
          * This is called by the remote service regularly to tell us about
          * new values.  Note that IPC calls are dispatched through a thread
@@ -284,13 +299,11 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
          * NOT be running in our main thread like most other things -- so,
          * to update the UI, we need to use a Handler to hop over there.
          */
-        public void msgChanged(String msgID, String status) throws RemoteException {
-            Log.d(NAME, "message " + msgID + "change status" + status);
+        public void emit(IEvent event) throws RemoteException {
+            Log.d(NAME, "event " + event);
             MessageStatusEvent evt = new MessageStatusEvent();
-            evt.msgID=msgID;
-            evt.status=status;
             Message msg = new Message();
-            msg.obj=evt;
+            msg.obj=event;
             msg.what=EVT;
             mHandler.handleMessage(msg);
 
@@ -310,11 +323,13 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
             if (msg.what == EVT) {
                 CoreModule coreModule = weakCoreModule.get();
                 if (coreModule != null) {
-                    MessageStatusEvent object = (MessageStatusEvent) msg.obj;
+                    IEvent object = (IEvent) msg.obj;
                     WritableMap params = Arguments.createMap();
-                    params.putString("msgID", object.msgID);
-                    params.putString("status", object.status);
-                    coreModule.sendEvent(coreModule.context, "MESSAGING", params);
+                    params.putString("name", object.name);
+                    params.putString("action", object.action);
+                    params.putString("payload",object.payload);
+                    params.putString("group",object.group);
+                    coreModule.sendEvent(coreModule.context, "CoreEvents", params);
                 }
             } else {
                 super.handleMessage(msg);

@@ -1,10 +1,11 @@
-import { flow, Instance, SnapshotIn, SnapshotOut, types } from "mobx-state-tree"
+import { applySnapshot, flow, Instance, SnapshotIn, SnapshotOut, types } from "mobx-state-tree"
 import { ChatModel, Chat } from "./Chat"
 import { api } from "../services/core"
 import { Message, MessageModel } from "./Message"
 import { ContactModel } from "./Contact"
 import { NewContactModel } from "./NewContact"
 import { apiOwnKeys } from "mobx/dist/internal"
+import { Event } from "../services/core/real"
 
 /**
  * Model description here for TypeScript hints.
@@ -26,7 +27,6 @@ export const ChatStoreModel = types
   .actions((self) => {
     const loadContact = flow(function* loadContact(){
       const list = yield api.beeCore.getContactList()
-      console.log("Loading contacts")
       self.contacts.replace(list)
     })
     const addContactAndCreateChat = flow(function* loadContact(){
@@ -37,25 +37,16 @@ export const ChatStoreModel = types
       const newContact = {...self.newContact}
       try {
         yield api.beeCore.newContact(newContact)
-        console.log("Im am loading from api")
-        console.log(newContact)
         self.contacts.push(newContact)
       } catch (error) {
-        console.log("failed to create new contract")
+        console.log("failed to create new contract", error)
       }
-      
-
-
-      console.log("new contact pushed")
     })
     const openPMChat = flow(function* openChat(contactId: string){
       let done = false;
-      console.log("open chat called")
       const contact = self.contacts.find(item=>item._id===contactId)
-      console.log("contact is :",contact)
       try {
         const chat: Chat = yield api.beeCore.getPMChat(contact)
-        console.log("chat is is: ",chat)
         let exist = self.chats.find(item=>item._id === chat._id)
         if (!exist){
           self.chats.push(chat)
@@ -63,18 +54,17 @@ export const ChatStoreModel = types
         selectChat(chat._id)
         done = true;        
       } catch (error) {
-        console.log("can not open chat")
+        console.log("can not open chat",error)
       }
 
       if(!done){
         try {
           const chat: Chat = yield api.beeCore.newPMChat(contact)
-          console.log("chat is is: ",chat)
           self.chats.push(chat)
           selectChat(chat._id)
           done = true;        
         } catch (error) {
-          console.log("can not create chat")
+          console.log("can not create chat",error)
         }
       }
 
@@ -88,41 +78,67 @@ export const ChatStoreModel = types
     const createPMChat = flow(function* createChat(contactId: string){
       const contact = self.contacts.find(item=>item._id===contactId)
       const newChat: Chat = yield api.beeCore.newPMChat(contact)
-      console.log(newChat)
       self.chats.push(newChat)
       selectChat(newChat._id)
-      console.log("new contact pushed")
     })
     const loadChatList = flow(function* loadChatList(){
       const list = yield api.beeCore.getChatList()
-      console.log(list)
       self.chats.replace(list)
     })
     const selectChat = flow(function* selectChat(chatId: string){
-      console.log(chatId)
-      console.log(self.chats.slice())
       const chat = self.chats.find((item)=>item._id === chatId)
       self.selected = chat
-      console.log("selected chat:", self.selected)
       const messages = yield api.beeCore.getChatMessages(chatId)
-      console.log(messages)
       self.messages.replace(messages)
     })
-    const send = flow(function* selectChat(msg: Message){
-      console.log("send message", msg)
-      console.log("selected contact", self.selected)
+    const send = flow(function* send(msg: Message){
       let rmsg: Message = yield api.beeCore.sendChatMessage(self.selected._id, {
         _id: msg._id,
+        chatId : "",
         createdAt: msg.createdAt,
         user: msg.user._id,
         text: msg.text
       })
-      console.log(rmsg)
       self.messages.push(rmsg)
     })
     const clear = ()=>{
       self.selected = null
       self.messages.replace([])
+    }
+    const onMessageChange = flow(function* onMessageChange(id: string, action: string){
+      console.log(self.selected)
+      if (self.selected !== null && self.messages.length>0){
+        console.log("pass data check")
+        try {
+          let rmsg: Message = yield api.beeCore.getMessage(id)
+          console.log(rmsg._id,rmsg.chatId)
+          if (action === "received"){
+            //TODO: Fix It
+            if(self.selected._id === rmsg.chatId){
+              console.log("pushing message",rmsg)
+              self.messages.push(rmsg)
+            }
+            let index = self.chats.findIndex((item)=>(item._id === rmsg._id))
+            if(index===-1){
+              
+            }
+       
+          }
+          if (self.selected._id === rmsg.chatId && self.selected._id === rmsg.chatId && action === "sent"){
+            const index = self.messages.findIndex((item)=>(item._id===id))
+            self.messages[index].sent = rmsg.sent
+            self.messages[index].pending = rmsg.pending
+            self.messages[index].received = rmsg.received
+          }
+          // console.log(messages)
+        } catch (error) {
+          console.log(error)
+        }
+
+      }
+    })
+    const setMsgs = (msgs) => {
+      applySnapshot(self.messages, msgs)
     }
     const afterCreate = flow(function* afterCreate(){
       yield loadChatList()
@@ -138,7 +154,8 @@ export const ChatStoreModel = types
       addContacts,
       loadContact,
       afterCreate,
-      addContactAndCreateChat
+      addContactAndCreateChat,
+      onMessageChange
     }
   }) // eslint-disable-line @typescript-eslint/no-unused-vars
 

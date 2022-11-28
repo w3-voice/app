@@ -12,16 +12,16 @@
 import "./i18n"
 import "./utils/ignoreWarnings"
 import { useFonts } from "expo-font"
-import React from "react"
+import React, { useEffect } from "react"
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context"
-import { IdentityModel, useInitialRootStore, useStores } from "./models"
+import { getRootStore, IdentityModel, useInitialRootStore, useStores,RootStore } from "./models"
+import coreSync from "./models/helpers/coreSync"
 import { AppNavigator, useNavigationPersistence } from "./navigators"
 import { ErrorBoundary } from "./screens/ErrorScreen/ErrorBoundary"
 import * as storage from "./utils/storage"
 import { customFontsToLoad } from "./theme"
 import { setupReactotron } from "./services/reactotron"
 import Config from "./config"
-import { api } from "./services/core"
 import { useCore } from "./services/core/hooks"
 
 // Set up Reactotron, which is a free desktop app for inspecting and debugging
@@ -49,7 +49,6 @@ interface AppProps {
  * This is the root component of our app.
  */
 function App(props: AppProps) {
-  console.log("app tx called")
   const { hideSplashScreen } = props
   const {
     initialNavigationState,
@@ -58,11 +57,17 @@ function App(props: AppProps) {
   } = useNavigationPersistence(storage, NAVIGATION_PERSISTENCE_KEY)
 
   const [areFontsLoaded] = useFonts(customFontsToLoad)
-  const [areAPIBinded] = useCore()
+  
 
   const { rehydrated } = useInitialRootStore(() => {
     // This runs after the root store has been initialized and rehydrated.
-
+    // const {chatStore} = getRootStore()
+    // coreSync(chatStore, api.beeCore)
+    // api.beeCore.subscribe((event)=>{
+    //   if(event.name == "ChangeMessageStatus" && event.group == "Messaging"){
+    //     reloadMsgs()
+    //   }
+    // })
     // const {identity} = useStores()
     // identity.loadIdentity()
     // If your initialization scripts run very fast, it's good to show the splash screen for just a bit longer to prevent flicker.
@@ -78,12 +83,20 @@ function App(props: AppProps) {
   // In iOS: application:didFinishLaunchingWithOptions:
   // In Android: https://stackoverflow.com/a/45838109/204044
   // You can replace with your own loading component if you wish.
-  console.log("rehydrated: ", rehydrated," isNavigationStateRestored: ",  isNavigationStateRestored," areAPIBinded: ",areAPIBinded)
-  if (!rehydrated || !isNavigationStateRestored || !areFontsLoaded || !areAPIBinded) return null
+  if (!rehydrated || !isNavigationStateRestored || !areFontsLoaded ) return null
 
   // otherwise, we're ready to render the app
   setTimeout(hideSplashScreen, 500)
-  console.log("loading app")
+      
+  // useEffect(()=>{
+  //   const {chatStore:{reloadMsgs}} = useStores()
+  //   api.beeCore.subscribe((event)=>{
+  //     if(event.name == "ChangeMessageStatus" && event.group == "Messaging"){
+  //       reloadMsgs()
+  //     }
+  //   })
+  // },[])
+
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <ErrorBoundary catchErrors={Config.catchErrors}>

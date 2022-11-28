@@ -9,7 +9,6 @@ import RNBootSplash from "react-native-bootsplash"
 import { Provider as PaperProvider } from 'react-native-paper'
 
 function IgniteApp() {
-  console.log("index js called")
   return (
     <PaperProvider>
       <App hideSplashScreen={RNBootSplash.hide} />

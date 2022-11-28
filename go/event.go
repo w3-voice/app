@@ -1,20 +1,25 @@
 package bridge
 
-type BroadCaster interface {
-	BroadCast(*Event)
+
+type Emitter interface {
+	Emit(*Event)
 }
 
-type brd struct{}
-
-func (b brd) BroadCast(evt *Event){
-	log.DPanicf("panicted %d", &evt)
-} 
+type brd struct{
+	Emitter
+}
 
 type Event struct {
-	MsgID  string
-	Status string
+	Name    string
+	Group   string
+	Action  string
+	Payload string
 }
 
-func NewEvent(id string, status string) *Event {
-	return &Event{id, status}
+func (b brd) Emit(evt *Event) {
+	log.DPanicf("panicted %d", &evt)
+}
+
+func NewEvent(n string, g string, a string, p string) *Event {
+	return &Event{n, g, a, p}
 }

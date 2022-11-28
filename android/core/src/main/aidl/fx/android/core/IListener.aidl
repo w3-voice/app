@@ -1,13 +1,13 @@
-// IEmitter.aidl
+// IListener.aidl
 package fx.android.core;
 
 // Declare any non-default types here with import statements
 import fx.android.core.IEvent;
 
 
-oneway interface IEmitter {
+oneway interface IListener {
     /**
     * A call back for notifying message change
     */
-     void emit(IEvent event);
+     void emit(in IEvent event);
 }

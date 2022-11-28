@@ -1,7 +1,11 @@
 import { createContext, useContext, useEffect, useState } from "react"
+
 import { setReactotronRootStore } from "../../services/reactotron"
 import { RootStore, RootStoreModel } from "../RootStore"
 import { setupRootStore } from "./setupRootStore"
+import coreSync from "./coreSync"
+import { useCore } from "../../services/core/hooks"
+import { api } from "../../services/core"
 
 /**
  * Create the initial (empty) global RootStore instance here.
@@ -51,11 +55,13 @@ export const useStores = () => useContext(RootStoreContext)
 export const useInitialRootStore = (callback: () => void | Promise<void>) => {
   const rootStore = useStores()
   const [rehydrated, setRehydrated] = useState(false)
+  // const [areAPIBinded] = useCore()
 
   // Kick off initial async loading actions, like loading fonts and rehydrating RootStore
   useEffect(() => {
     let _unsubscribe
     ;(async () => {
+      await api.beeCore.bindService()
       // set up the RootStore (returns the state restored from AsyncStorage)
       const { restoredState, unsubscribe } = await setupRootStore(rootStore)
       _unsubscribe = unsubscribe
@@ -65,7 +71,7 @@ export const useInitialRootStore = (callback: () => void | Promise<void>) => {
 
       // let the app know we've finished rehydrating
       setRehydrated(true)
-
+      coreSync(rootStore.chatStore)
       // invoke the callback, if provided
       if (callback) callback()
     })()
