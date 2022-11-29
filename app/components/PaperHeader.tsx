@@ -1,8 +1,9 @@
 import React from 'react';
+import { Platform } from 'react-native'
 import { Appbar,Menu } from 'react-native-paper';
 import { useStores } from '../models';
 import Clipboard from '@react-native-clipboard/clipboard';
-
+const MORE_ICON = Platform.OS === 'ios' ? 'dots-horizontal' : 'dots-vertical';
 
 export function PaperHeader({ navigation, back  }) {
     const [visible, setVisible] = React.useState(false);
@@ -26,7 +27,7 @@ export function PaperHeader({ navigation, back  }) {
             visible={visible}
             onDismiss={closeMenu}
             anchor={
-              <Appbar.Action icon="menu" color="white" onPress={openMenu} />
+              <Appbar.Action icon={MORE_ICON} color="black" onPress={openMenu} />
             }>
             <Menu.Item onPress={copyID} title="ID" />
           </Menu>
