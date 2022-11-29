@@ -1,13 +1,12 @@
-import React, { FC, useEffect } from "react"
-import { FlatList, TouchableOpacity, View } from 'react-native';
+import React, { FC } from "react"
+import { FlatList, View } from 'react-native';
 import { observer } from "mobx-react-lite"
-import { TabBarIOSItem, ViewStyle } from "react-native"
+import { ViewStyle } from "react-native"
 import { StackScreenProps } from "@react-navigation/stack"
 import { AppStackScreenProps } from "../navigators"
-import { Button, Icon, ListItem, Screen, Text } from "../components"
-import { useNavigation, useRoute } from "@react-navigation/native"
+import { Screen } from "../components"
+import { useNavigation } from "@react-navigation/native"
 import { useStores } from "../models"
-import { spacing } from "../theme";
 import { FAB } from 'react-native-paper';
 import { List } from 'react-native-paper';
 
