@@ -14,11 +14,19 @@ import { useStores } from "../models"
 export const ChatScreen: FC<StackScreenProps<AppStackScreenProps, "ChatNavigator">> = observer(function ChatScreen() {
   // Pull in one of our MST stores
   const { chatStore: { sortedMessages, send }, identity } = useStores()
+  const [lMsg, setLMsg] = useState([])
+  useEffect(()=>{
+    console.log("sorted chat updated",sortedMessages[0],identity.user._id)
+    // GiftedChat.
+    setLMsg(prv =>  sortedMessages)
+    // setLMsg([...sortedMessages])
+    // setLMsg(sortedMessages)
+  },[sortedMessages])
 
   return (
     
     <GiftedChat
-      messages={sortedMessages}
+      messages={lMsg}
       onSend={messages => {
         messages.map(msg=>send(msg))
       }}

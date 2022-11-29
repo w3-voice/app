@@ -1,10 +1,5 @@
 package bridge
 
-import (
-	"encoding/base64"
-	"encoding/json"
-)
-
 type Identity struct {
 	ID string `json:"_id"`
 	Name string `json:"name"`
@@ -18,6 +13,7 @@ type Chat struct {
 
 type Message struct {
 	ID string `json:"_id"`
+	ChatID string `json:"chatId"`
 	Text string `json:"text"`
 	CreatedAt int64 `json:"createdAt"`
 	ContactID string `json:"user"`
@@ -29,13 +25,4 @@ type Message struct {
 type Contact struct {
 	ID string `json:"_id"`
 	Name string `json:"name"`
-}
-
-func Marshal(v any) (string, error) {
-	bytes, err :=json.Marshal(v)
-	if err != nil {
-		return "" ,err
-	}
-	return base64.StdEncoding.EncodeToString(bytes), nil
-
 }

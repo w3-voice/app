@@ -2,11 +2,11 @@ package bridge
 
 import (
 	"context"
-	"net"
 	"strings"
 
 	"github.com/hood-chat/core"
 	"github.com/hood-chat/core/entity"
+	"github.com/hood-chat/core/event"
 	logging "github.com/ipfs/go-log/v2"
 	ma "github.com/multiformats/go-multiaddr"
 	madns "github.com/multiformats/go-multiaddr-dns"
@@ -20,22 +20,29 @@ type Bridge struct {
 }
 
 func NewBridge(repoPath string, conf *HostConfig) (*Bridge, error) {
-	net.DefaultResolver = &DefaultResolver
-
-	rslvOpt := madns.WithDefaultResolver(&DefaultResolver)
-	maRslv, err := madns.NewResolver(rslvOpt)
-	if err != nil {
-		panic(err)
+	if conf.emitter != nil {
+		SetEmitter(conf.emitter)
 	}
-	madns.DefaultResolver = maRslv
-
 	hb := NewMobileHost(conf)
 	if hb == nil {
 		panic("new hb failed")
 	}
 
 	m := core.MessengerBuilder(repoPath, Option(), hb)
-	f := &Bridge{core: m}
+
+	f := &Bridge{m}
+	sub, err := m.EventBus().Subscribe(new(event.EvtObject))
+	if err != nil {
+		panic("can not subscribe to bus")
+	}
+	go func() {
+		defer sub.Close()
+
+		for e := range sub.Out() {
+			evt := Event(e.(event.EvtObject))
+			getEmitter().Emit(&evt)
+		}
+	}()
 
 	return f, nil
 }
@@ -67,42 +74,32 @@ func (b *Bridge) GetInterfaces() (string, error) {
 }
 
 func (b *Bridge) GetIdentity() (string, error) {
-	id, err := b.core.GetIdentity()
+	idn, err := b.core.GetIdentity()
 	if err != nil {
 		return "", err
 	}
-	return Marshal(Identity{
-		ID:   id.ID,
-		Name: id.Name,
-	})
+	i := BIdentity(idn)
+	return i.Serialize()
 }
 
 func (b *Bridge) NewIdentity(name string) (string, error) {
-	id, err := b.core.SignUp(name)
+	idn, err := b.core.SignUp(name)
 	if err != nil {
 		return "", err
 	}
-	return Marshal(Identity{
-		ID:   id.ID,
-		Name: id.Name,
-	})
+	i := BIdentity(*idn)
+	return i.Serialize()
 }
 
 func (b *Bridge) GetChat(id string) (string, error) {
+	chatId := entity.ID(id)
 	msgr := b.core
-	ch, err := msgr.GetChat(id)
+	ch, err := msgr.GetChat(chatId)
 	if err != nil {
 		return "", err
 	}
-	mids := []string{}
-	for _, m := range ch.Members {
-		mids = append(mids, m.ID)
-	}
-	return Marshal(Chat{
-		ID:      ch.ID,
-		Name:    ch.Name,
-		Members: mids,
-	})
+	c := BChat(ch)
+	return c.Serialize()
 }
 
 func (b *Bridge) GetChats() (string, error) {
@@ -111,61 +108,40 @@ func (b *Bridge) GetChats() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	chs := make([]Chat, 0)
-
-	for _, c := range ch {
-		mids := []string{}
-		for _, m := range c.Members {
-			mids = append(mids, m.ID)
-		}
-		chs = append(chs, Chat{
-			ID:      c.ID,
-			Name:    c.Name,
-			Members: mids,
-		})
-	}
-
-	return Marshal(chs)
+	res := BChats(ch)
+	return res.Serialize()
 }
 
 func (b *Bridge) GetMessages(chatID string) (string, error) {
+	id := entity.ID(chatID)
 	msgr := b.core
-	res := make([]Message, 0)
-
-	msgs, err := msgr.GetMessages(chatID)
+	msgs, err := msgr.GetMessages(id)
 	if err != nil {
 		return "", err
 	}
+	res := BMessages(msgs)
+	return res.Serialize()
+}
 
-	for _, msg := range msgs {
-		res = append(res, Message{
-			ID:        msg.ID,
-			Text:      msg.Text,
-			CreatedAt: msg.CreatedAt.Unix(),
-			ContactID: msg.Author.ID,
-			Sent:      msg.Status != entity.Pending,
-			Received:  msg.Status == entity.Seen,
-			Pending:   msg.Status == entity.Pending,
-		})
+func (b *Bridge) GetMessage(ID string) (string, error) {
+	id := entity.ID(ID)
+	msgr := b.core
+	msg, err := msgr.GetMessage(id)
+	if err != nil {
+		return "", err
 	}
-	return Marshal(res)
+	bmsg := BMessage(msg)
+	return bmsg.Serialize()
 }
 
 func (b *Bridge) SendMessage(chatId string, text string) (string, error) {
 	msgr := b.core
-	enp, err := msgr.NewMessage(chatId, text)
+	msg, err := msgr.SendPM(entity.ID(chatId), text)
 	if err != nil {
 		return "", err
 	}
-	return Marshal(Message{
-		ID:        enp.Msg.ID,
-		Text:      enp.Msg.Text,
-		CreatedAt: enp.Msg.CreatedAt.Unix(),
-		ContactID: enp.Msg.Author.ID,
-		Sent:      enp.Msg.Status != entity.Pending,
-		Received:  enp.Msg.Status == entity.Seen,
-		Pending:   enp.Msg.Status == entity.Pending,
-	})
+	bmsg := BMessage(*msg)
+	return bmsg.Serialize()
 }
 
 func (b *Bridge) GetContacts() (string, error) {
@@ -174,58 +150,48 @@ func (b *Bridge) GetContacts() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	res := make([]Contact, 0)
-	for _, c := range cs {
-		res = append(res, Contact(c))
-	}
-	return Marshal(res)
+	res := BContacts(cs)
+	return res.Serialize()
 }
 
 func (b *Bridge) GetContact(id string) (string, error) {
+	contactID := entity.ID(id)
 	msgr := b.core
-	c, err := msgr.GetContact(id)
+	c, err := msgr.GetContact(contactID)
 	if err != nil {
 		return "", err
 	}
-	return Marshal(Contact(c))
+	res := BContact(c)
+	return res.Serialize()
 }
 
 func (b *Bridge) AddContact(id string, name string) error {
 	msgr := b.core
 	err := msgr.AddContact(entity.Contact{
-		ID:   id,
+		ID:   entity.ID(id),
 		Name: name,
 	})
 	return err
 }
 
 func (b Bridge) NewPMChat(contactID string) (string, error) {
+	id := entity.ID(contactID)
 	msgr := b.core
-	pm, err := msgr.CreatePMChat(contactID)
+	pm, err := msgr.CreatePMChat(id)
 	if err != nil {
 		return "", err
 	}
-
-	return Marshal(toChat(pm))
+	res := BChat(pm)
+	return res.Serialize()
 }
 
 func (b Bridge) GetPMChat(contactID string) (string, error) {
+	id := entity.ID(contactID)
 	msgr := b.core
-	pm, err := msgr.GetPMChat(contactID)
+	pm, err := msgr.GetPMChat(id)
 	if err != nil {
 		return "", err
 	}
-	return Marshal(toChat(pm))
-}
-
-func toChat(ch entity.ChatInfo) Chat {
-	mids := []string{}
-	for _, m := range ch.Members {
-		mids = append(mids, m.ID)
-	}
-	return Chat{
-		ID:      ch.ID,
-		Name:    ch.Name,
-		Members: mids,
-	}
+	res := BChat(pm)
+	return res.Serialize()
 }

@@ -35,6 +35,7 @@ export interface Chat {
 export interface Message {
   _id: ID,
   text: string,
+  chatId: string,
   createdAt: Date | number
   user: ID,
   sent?: boolean,
@@ -42,3 +43,9 @@ export interface Message {
   pending?: boolean,
 }
 
+export interface Event {
+  name: string,
+  action: string,
+  group: string,
+  payload: string
+}

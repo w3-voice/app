@@ -13,30 +13,29 @@ export const IdentityModel = types
   })
   .views((self) => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions((self) => {
-    const newIdentity = flow(function* newIdentity(name: string){
+    const newIdentity = flow(function* newIdentity(name: string) {
       let idObj = yield api.beeCore.newIdentity(name)
-      self.user = {_id :idObj._id, name: idObj.name}
+      self.user = { _id: idObj._id, name: idObj.name }
       self.isLoggedIn = true
     })
-    const loadIdentity = flow(function* load(){
-    try {
-      let hasId = yield api.beeCore.hasIdentity()
-      if (!hasId) {
-        self.user = null
-        self.isLoggedIn = false
+    const loadIdentity = flow(function* load() {
+      try {
+        let hasId = yield api.beeCore.hasIdentity()
+        if (!hasId) {
+          self.user = null
+          self.isLoggedIn = false
+        }
+        else {
+          let idObj = yield api.beeCore.getIdentity()
+          self.user = { _id: idObj._id, name: idObj.name }
+          self.isLoggedIn = true
+        }
+      } catch (error) {
+        console.log(error)
       }
-      else {
-        let idObj = yield api.beeCore.getIdentity()
-        console.log("identity:", idObj)
-        self.user = {_id :idObj._id, name: idObj.name}
-        self.isLoggedIn = true
-      }
-    } catch (error) {
-      console.log(error)
-    }
 
-    }) 
-    const setName = (name)=>{
+    })
+    const setName = (name) => {
       self.user.name = name
     }
     return {
@@ -47,7 +46,7 @@ export const IdentityModel = types
     }
   }) // eslint-disable-line @typescript-eslint/no-unused-vars
 
-export interface Identity extends Instance<typeof IdentityModel> {}
-export interface IdentitySnapshotOut extends SnapshotOut<typeof IdentityModel> {}
-export interface IdentitySnapshotIn extends SnapshotIn<typeof IdentityModel> {}
-export const createIdentityDefaultModel = () => types.optional(IdentityModel, {isLoggedIn:false})
+export interface Identity extends Instance<typeof IdentityModel> { }
+export interface IdentitySnapshotOut extends SnapshotOut<typeof IdentityModel> { }
+export interface IdentitySnapshotIn extends SnapshotIn<typeof IdentityModel> { }
+export const createIdentityDefaultModel = () => types.optional(IdentityModel, { isLoggedIn: false })

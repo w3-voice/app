@@ -13,21 +13,34 @@ import java.io.File;
 
 import bridge.Bridge;
 import bridge.Bridge_;
+import bridge.Emitter;
 import bridge.HostConfig;
 
 
 public class CoreService extends Service {
     private final String NAME = "CoreService";
-    private final String VERSION = "0.0.2";
+    private final String VERSION = "0.0.3";
     Bridge_ core = null;
     String appDir;
     String storeDirPath;
     String path;
+    final CoreEmitter emitter = new CoreEmitter();
+
+    int mValue = 0;
     /**
      * Class for clients to access.  Because we know this service always
      * runs in the same process as its clients, we don't need to deal with
      * IPC.
      */
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        Log.i("IsolatedService", "Task removed in " + this + ": " + rootIntent);
+        stopSelf();
+    }
+
+
+
     public class LocalBinder extends Binder {
         CoreService getService() {
             return CoreService.this;
@@ -57,6 +70,7 @@ public class CoreService extends Service {
                 NetDriver inet = new NetDriver();
                 hostConfig.setNetDriver(inet);
             }
+            hostConfig.setBroadCaster(emitter);
             this.core = Bridge.newBridge(path, hostConfig);
             String s1 = this.core.getInterfaces();
             Log.d(NAME, "driver" + s1);
@@ -85,7 +99,6 @@ public class CoreService extends Service {
 //        Toast.makeText(this, "Background Service Created", Toast.LENGTH_LONG).show();
 //        showNotification();
         return START_REDELIVER_INTENT;
-
     }
     @Override
     public void onDestroy() {
@@ -108,6 +121,12 @@ public class CoreService extends Service {
     private final IBinder mBinder = new LocalBinder();
 
     private final ICoreService.Stub binder = new ICoreService.Stub() {
+        public void registerListener(IListener cb) {
+            if (cb != null) emitter.addListener(cb);
+        }
+        public void unregisterListener(IListener cb) {
+            if (cb != null) emitter.removeListener(cb);
+        }
 
         public boolean addContact(String id, String name) throws RemoteException {
             try {
@@ -178,6 +197,15 @@ public class CoreService extends Service {
         public String getMessages(String id) throws RemoteException {
             try {
                 return core.getMessages(id);
+            } catch (Exception e) {
+                Log.e(NAME, "can not retrieve messages", e);
+                return null;
+            }
+        }
+
+        public String getMessage(String id) throws RemoteException {
+            try {
+                return core.getMessage(id);
             } catch (Exception e) {
                 Log.e(NAME, "can not retrieve messages", e);
                 return null;

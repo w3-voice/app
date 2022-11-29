@@ -20,7 +20,6 @@ export const ChatListScreen: FC<StackScreenProps<AppStackScreenProps, "ChatList"
   const renderItem = ({ item }) => (
     <ListItem onPress={() => {
       chatStore.clear()
-      console.log("set chat id: ", item._id)
       chatStore.selectChat(item._id)
       navigation.navigate("Chat")
     }}>

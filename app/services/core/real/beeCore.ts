@@ -1,15 +1,17 @@
 import { BeeCore, Identity } from "../core.types";
 import { Chat, Contact, ID, Message } from "./beeCore.type";
-import { NativeModules } from 'react-native';
+import { NativeEventEmitter, NativeModules } from 'react-native';
 const { CoreModule } = NativeModules;
 import 'fastestsmallesttextencoderdecoder';
 import { Buffer } from 'buffer';
 
 class RNBeeCore implements BeeCore {
     ready = false
+    nativeEmitter = null
+    eventListeners = []
 
     constructor() {
-
+        this.nativeEmitter = new NativeEventEmitter(CoreModule)
     }
 
     async bindService(): Promise<boolean> {
@@ -26,12 +28,14 @@ class RNBeeCore implements BeeCore {
         })
     }
 
+    subscribe(callback){
+        this.eventListeners.push(this.nativeEmitter.addListener('CoreEvents', callback));
+    }
+
     async getIdentity(): Promise<Identity> {
         try {
-            console.log("get identity called")
             const res = await CoreModule.getIdentity()
             const id: Identity = base64ToObject(res)
-            console.log("get identity result",id)
             return id
         } catch (error) {
             throw error
@@ -63,11 +67,9 @@ class RNBeeCore implements BeeCore {
         return newChat
     }
     async getChat(chatID: ID) {
-        console.log("getPMChat called with param: ",chatID)
         try {
             const res = await CoreModule.getChat(chatID.toString())
             const chat:Chat = base64ToObject(res)
-            console.log("getPMChat chat is:", chat)
             return chat
         } catch (error) {
             throw error
@@ -77,10 +79,7 @@ class RNBeeCore implements BeeCore {
     async getChatList(): Promise<Chat[]> {
         try {
             const res = await CoreModule.getChats()
-            console.log("string response from getChats",res)
             const chat:Chat[] = base64ToObject(res)
-            console.log(chat)
-            console.log("parsed response from getChats",chat)
             return chat
         } catch (error) {
             throw error
@@ -90,17 +89,25 @@ class RNBeeCore implements BeeCore {
         try {
             const res = await CoreModule.getMessages(chatId)
             const msgs:Message[] = base64ToObject(res)
-            return msgs.map((m)=> ({...m,createdAt:convertUnixTimeToLocalDate(m.createdAt)}))
+            return msgs
         } catch (error) {
             throw error
         } 
     }
     async sendChatMessage(chatId: string, msg: Message): Promise<Message> {
         try {
-            console.log("call send chat")
             const res = await CoreModule.sendMessage(chatId, msg.text)
             const ms:Message = base64ToObject(res)
-            return {...ms,createdAt:convertUnixTimeToLocalDate(ms.createdAt)}
+            return ms
+        } catch (error) {
+            throw error
+        } 
+    }
+    async getMessage(id: string): Promise<Message> {
+        try {
+            const res = await CoreModule.getMessage(id)
+            const msg:Message = base64ToObject(res)
+            return msg
         } catch (error) {
             throw error
         } 
@@ -129,7 +136,14 @@ class RNBeeCore implements BeeCore {
 }
 
 export const base64ToObject = <T>(msg: string): T => {
-    return JSON.parse(Buffer.from(msg, 'base64').toString());
+    const timeFields = ["createdAt"]
+    let obj = JSON.parse(Buffer.from(msg, 'base64').toString());
+    for(let f of timeFields){
+        if (f in obj){
+            obj[f]=convertUnixTimeToLocalDate(obj[f])
+        }
+    }
+    return obj;
 };
 
 export const objectToBase64String = (obj: object): string => {

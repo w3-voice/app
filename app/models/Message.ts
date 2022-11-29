@@ -11,6 +11,7 @@ export const MessageModel = types
     _id: types.identifier,
     text: types.string,
     createdAt: types.Date,
+    chatId: types.string,
     user: types.reference(ContactModel),
     sent: types.maybeNull(types.boolean),
     received: types.maybeNull(types.boolean),
