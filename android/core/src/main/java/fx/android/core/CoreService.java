@@ -19,7 +19,7 @@ import bridge.HostConfig;
 
 public class CoreService extends Service {
     private final String NAME = "CoreService";
-    private final String VERSION = "0.0.2";
+    private final String VERSION = "0.0.3";
     Bridge_ core = null;
     String appDir;
     String storeDirPath;

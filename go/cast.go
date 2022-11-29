@@ -25,7 +25,7 @@ func (m *BMessage) cast() Message {
 		ID:        m.ID.String(),
 		Text:      m.Text,
 		ChatID:    string(m.ChatID),
-		CreatedAt: m.CreatedAt.Unix(),
+		CreatedAt: m.CreatedAt * 1000,
 		ContactID: m.Author.ID.String(),
 		Sent:      m.Status == entity.Sent,
 		Received:  m.Status == entity.Seen,
