@@ -136,13 +136,7 @@ class RNBeeCore implements BeeCore {
 }
 
 export const base64ToObject = <T>(msg: string): T => {
-    const timeFields = ["createdAt"]
     let obj = JSON.parse(Buffer.from(msg, 'base64').toString());
-    for(let f of timeFields){
-        if (f in obj){
-            obj[f]=convertUnixTimeToLocalDate(obj[f])
-        }
-    }
     return obj;
 };
 
