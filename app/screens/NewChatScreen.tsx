@@ -20,6 +20,8 @@ export const NewChatScreen: FC<StackScreenProps<AppStackScreenProps, "NewChat">>
   return () => {
     openPMChat(id).then(()=>{
       navigation.navigate("Chat")
+    }).catch((e)=>{
+      console.log("open failed",e)
     })
   }
 }

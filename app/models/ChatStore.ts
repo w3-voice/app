@@ -67,13 +67,9 @@ export const ChatStoreModel = types
           console.log("can not create chat",error)
         }
       }
-
-      if(done){
+      if(!done){
         throw "can not open chat"
-        
       }
-
-  
     })
     const createPMChat = flow(function* createChat(contactId: string){
       const contact = self.contacts.find(item=>item._id===contactId)
