@@ -7,7 +7,8 @@ export interface BeeCoreInstance {
   getChatList(): Promise<Chat[]>
   getChatMessages(id: string): Promise<Message[]>
   sendChatMessage(chatId: ID, msg: Message): Promise<Message>
-  submitIncomingMessages(handler: (chatId: ID, msg: Message)=>void): void
+  subscribe(callback: (event: any) => void): void
+  unsubscribe(): void
   getContactList(): Promise<Contact[]>
   newContact(contact: Contact): Promise<void>
   newPMChat(contact:Contact): Promise<Chat>

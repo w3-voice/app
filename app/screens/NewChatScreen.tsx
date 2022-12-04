@@ -5,26 +5,36 @@ import { StackScreenProps } from "@react-navigation/stack"
 import { AppStackScreenProps } from "../navigators"
 import { ListItem, Screen, Text, Button } from "../components"
 import { useNavigation } from "@react-navigation/native"
-import { ChatStoreModel, useStores } from "../models"
+import { useStores } from "../models"
 import { spacing } from "../theme"
-
+import { FAB } from 'react-native-paper';
+import { List } from 'react-native-paper';
 
 
 export const NewChatScreen: FC<StackScreenProps<AppStackScreenProps, "NewChat">> = observer(function NewChatScreen() {
  // Pull in one of our MST stores
- const { chatStore: {contacts, chats, openPMChat} } = useStores()
+ const { chatStore: {contacts, openPMChat} } = useStores()
  
  const navigation = useNavigation()
-
- const renderItem = ({ item }) => (
-   <ListItem onPress={() => {
-    openPMChat(item._id).then(()=>{
+ const navigateItem = (id) => {
+  return () => {
+    openPMChat(id).then(()=>{
       navigation.navigate("Chat")
+    }).catch((e)=>{
+      console.log("open failed",e)
     })
-   }}>
-     <Text text={item.name} />
-   </ListItem>
- )
+  }
+}
+
+const newContact = () => {
+  navigation.navigate("NewContact")
+}
+
+const renderItem = ({ item }) => (
+  <List.Item
+    title={item.name}
+    onPress={navigateItem(item._id)} />
+)
 
  return (
    <>
@@ -40,15 +50,13 @@ export const NewChatScreen: FC<StackScreenProps<AppStackScreenProps, "NewChat">>
        />
      </Screen>
      <View style={$fixedView}>
-       <Button
-         style={$fab}
-         onPress={()=>{
-          navigation.navigate("NewContact")
-         }}
-       />
-     </View>
+        <FAB
+          icon="plus"
+          style={$fab}
+          onPress={newContact}
+        />
+      </View>
    </>
-
  )
 })
 
@@ -57,24 +65,20 @@ const $root: ViewStyle = {
   height: 100
 }
 
+const $fab: ViewStyle = {
+  margin: 40,
+  right: 0,
+  bottom: 0,
+}
+const $screenContentContainer: ViewStyle = {
+  paddingVertical: 0,
+  paddingHorizontal: 0,
+}
+
 const $fixedView: ViewStyle = {
   position: 'absolute',
   right: 0,
   bottom: 0,
   flexDirection: 'row',
   justifyContent: 'flex-end',
-}
-
-const $fab: ViewStyle = {
-  width: 60,
-  height: 60,
-  borderRadius: 30,
-  backgroundColor: '#ee6e73',
-  position: 'absolute',
-  bottom: 15,
-  right: 15,
-}
-const $screenContentContainer: ViewStyle = {
-  paddingVertical: spacing.huge,
-  paddingHorizontal: spacing.large,
 }

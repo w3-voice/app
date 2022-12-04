@@ -13,12 +13,22 @@ export const MessageModel = types
     createdAt: types.Date,
     chatId: types.string,
     user: types.reference(ContactModel),
-    sent: types.maybeNull(types.boolean),
-    received: types.maybeNull(types.boolean),
-    pending: types.maybeNull(types.boolean),
+    sent: types.maybe(types.boolean),
+    received: types.maybe(types.boolean),
+    pending: types.maybe(types.boolean),
+    image: types.maybe(types.string),
+    video: types.maybe(types.string),
+    audio: types.maybe(types.string),
+    system: types.maybe(types.boolean),
   })
   .views((self) => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
-  .actions((self) => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
+  .actions((self) => ({
+    onSent(){
+      self.sent = true
+      self.received = false
+      self.pending = false
+    }
+  })) // eslint-disable-line @typescript-eslint/no-unused-vars
 
 export interface Message extends Instance<typeof MessageModel> {}
 export interface MessageSnapshotOut extends SnapshotOut<typeof MessageModel> {}

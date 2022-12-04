@@ -7,7 +7,7 @@ import { Buffer } from 'buffer';
 
 class RNBeeCore implements BeeCore {
     ready = false
-    nativeEmitter = null
+    nativeEmitter: NativeEventEmitter = null
     eventListeners = []
 
     constructor() {
@@ -28,8 +28,13 @@ class RNBeeCore implements BeeCore {
         })
     }
 
-    subscribe(callback){
+    subscribe(callback: (event: any) => void){
         this.eventListeners.push(this.nativeEmitter.addListener('CoreEvents', callback));
+    }
+
+    unsubscribe() {
+        this.nativeEmitter.removeAllListeners('CoreEvents')
+        this.eventListeners = []
     }
 
     async getIdentity(): Promise<Identity> {
@@ -136,13 +141,7 @@ class RNBeeCore implements BeeCore {
 }
 
 export const base64ToObject = <T>(msg: string): T => {
-    const timeFields = ["createdAt"]
     let obj = JSON.parse(Buffer.from(msg, 'base64').toString());
-    for(let f of timeFields){
-        if (f in obj){
-            obj[f]=convertUnixTimeToLocalDate(obj[f])
-        }
-    }
     return obj;
 };
 
