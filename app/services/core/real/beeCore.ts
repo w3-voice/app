@@ -7,7 +7,7 @@ import { Buffer } from 'buffer';
 
 class RNBeeCore implements BeeCore {
     ready = false
-    nativeEmitter = null
+    nativeEmitter: NativeEventEmitter = null
     eventListeners = []
 
     constructor() {
@@ -28,8 +28,13 @@ class RNBeeCore implements BeeCore {
         })
     }
 
-    subscribe(callback){
+    subscribe(callback: (event: any) => void){
         this.eventListeners.push(this.nativeEmitter.addListener('CoreEvents', callback));
+    }
+
+    unsubscribe() {
+        this.nativeEmitter.removeAllListeners('CoreEvents')
+        this.eventListeners = []
     }
 
     async getIdentity(): Promise<Identity> {

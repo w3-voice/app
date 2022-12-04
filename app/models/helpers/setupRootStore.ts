@@ -12,6 +12,8 @@
 import { applySnapshot, IDisposer, onSnapshot } from "mobx-state-tree"
 import type { RootStore } from "../RootStore"
 import * as storage from "../../utils/storage"
+import { api } from "../../services/core"
+import coreSync from "./coreSync"
 
 /**
  * The key we'll be saving our state as within async storage.
@@ -22,6 +24,7 @@ const ROOT_STATE_STORAGE_KEY = "root-v1"
  * Setup the root state.
  */
 let _disposer: IDisposer
+let _subscribed = false
 export async function setupRootStore(rootStore: RootStore) {
   let restoredState: any
 
@@ -29,6 +32,13 @@ export async function setupRootStore(rootStore: RootStore) {
     // load the last known state from AsyncStorage
     // restoredState = ({} || {})
     // applySnapshot(rootStore, restoredState)
+    if (!_subscribed){
+      await api.beeCore.bindService()
+      coreSync(rootStore.chatStore)
+      _subscribed = true;
+    }
+   
+    
     
   } catch (e) {
     // if there's any problems loading, then inform the dev what happened
@@ -44,6 +54,7 @@ export async function setupRootStore(rootStore: RootStore) {
   _disposer = onSnapshot(rootStore, (snapshot) => storage.save(ROOT_STATE_STORAGE_KEY, snapshot))
 
   const unsubscribe = () => {
+    api.beeCore.unsubscribe()
     _disposer()
     _disposer = undefined
   }

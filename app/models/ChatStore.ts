@@ -1,11 +1,9 @@
-import { applySnapshot, flow, Instance, SnapshotIn, SnapshotOut, types } from "mobx-state-tree"
+import {  flow, Instance, SnapshotIn, SnapshotOut, types } from "mobx-state-tree"
 import { ChatModel, Chat } from "./Chat"
 import { api } from "../services/core"
 import { Message, MessageModel } from "./Message"
 import { ContactModel } from "./Contact"
 import { NewContactModel } from "./NewContact"
-import { apiOwnKeys } from "mobx/dist/internal"
-import { Event } from "../services/core/real"
 
 /**
  * Model description here for TypeScript hints.
@@ -15,7 +13,7 @@ export const ChatStoreModel = types
   .props({
     chats: types.array(ChatModel),
     selected: types.maybeNull(types.reference(ChatModel)),
-    messages: types.optional(types.array(MessageModel),[]),
+    messages:types.array(MessageModel),
     contacts: types.array(ContactModel),
     newContact: NewContactModel
   })
@@ -85,6 +83,7 @@ export const ChatStoreModel = types
       const chat = self.chats.find((item)=>item._id === chatId)
       self.selected = chat
       const messages = yield api.beeCore.getChatMessages(chatId)
+      // console.log(messages)
       self.messages.replace(messages)
     })
     const send = flow(function* send(msg: Message){
@@ -95,6 +94,7 @@ export const ChatStoreModel = types
         user: msg.user._id,
         text: msg.text
       })
+      // setMsgs([rmsg, ...self.messages])
       self.messages.push(rmsg)
     })
     const clear = ()=>{
@@ -102,7 +102,7 @@ export const ChatStoreModel = types
       self.messages.replace([])
     }
     const onMessageChange = flow(function* onMessageChange(id: string, action: string){
-      console.log(self.selected)
+      console.log("update message called with ", id, action)
       if (self.selected !== null && self.messages.length>0){
         console.log("pass data check")
         try {
@@ -111,31 +111,28 @@ export const ChatStoreModel = types
           if (action === "received"){
             //TODO: Fix It
             if(self.selected._id === rmsg.chatId){
-              console.log("pushing message",rmsg)
               self.messages.push(rmsg)
+              // setMsgs([rmsg, ...self.messages])
             }
-            let index = self.chats.findIndex((item)=>(item._id === rmsg._id))
-            if(index===-1){
-              
-            }
-       
+            // TODO update chat list if chat not exist.   
           }
           if (self.selected._id === rmsg.chatId && self.selected._id === rmsg.chatId && action === "sent"){
-            const index = self.messages.findIndex((item)=>(item._id===id))
-            self.messages[index].sent = rmsg.sent
-            self.messages[index].pending = rmsg.pending
-            self.messages[index].received = rmsg.received
+            let msgg = null
+            let index = self.messages.findIndex((item)=>(item._id === rmsg._id))
+            
+            if(index > -1){
+              console.log("update message status :", index)
+              self.messages[index].onSent()
+              console.log("message status ", self.messages[index])
+            }
           }
-          // console.log(messages)
+         
         } catch (error) {
           console.log(error)
         }
 
       }
     })
-    const setMsgs = (msgs) => {
-      applySnapshot(self.messages, msgs)
-    }
     const afterCreate = flow(function* afterCreate(){
       yield loadChatList()
       yield loadContact()

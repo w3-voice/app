@@ -1,32 +1,20 @@
-import React, { FC, useEffect, useState } from "react"
+import React, { FC } from "react"
 import { observer } from "mobx-react-lite"
-import { ViewStyle } from "react-native"
 import { StackScreenProps } from "@react-navigation/stack"
 import { AppStackScreenProps } from "../navigators"
-import { Screen, Text } from "../components"
-import { useRoute } from "@react-navigation/native"
-import { spacing } from "../theme"
-import { GiftedChat } from 'react-native-gifted-chat'
-// import { useNavigation } from "@react-navigation/native"
+import { GiftedChat } from '../components/chat/GiftedChat'
 import { useStores } from "../models"
 
 
 export const ChatScreen: FC<StackScreenProps<AppStackScreenProps, "ChatNavigator">> = observer(function ChatScreen() {
   // Pull in one of our MST stores
-  const { chatStore: { sortedMessages, send }, identity } = useStores()
-  const [lMsg, setLMsg] = useState([])
-  useEffect(()=>{
-    console.log("sorted chat updated",sortedMessages[0],identity.user._id)
-    // GiftedChat.
-    setLMsg(prv =>  sortedMessages)
-    // setLMsg([...sortedMessages])
-    // setLMsg(sortedMessages)
-  },[sortedMessages])
+  const { chatStore: {sortedMessages, send} , identity } = useStores()
 
   return (
-    
     <GiftedChat
-      messages={lMsg}
+      messages={
+        sortedMessages
+      }
       onSend={messages => {
         messages.map(msg=>send(msg))
       }}
@@ -34,12 +22,3 @@ export const ChatScreen: FC<StackScreenProps<AppStackScreenProps, "ChatNavigator
     />
   )
 })
-
-const $root: ViewStyle = {
-  flex: 1,
-}
-
-const $screenContentContainer: ViewStyle = {
-  paddingVertical: spacing.huge,
-  paddingHorizontal: spacing.large,
-}
