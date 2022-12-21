@@ -102,9 +102,9 @@ func (b *Bridge) GetChat(id string) (string, error) {
 	return c.Serialize()
 }
 
-func (b *Bridge) GetChats() (string, error) {
+func (b *Bridge) GetChats(skip int, limit int) (string, error) {
 	msgr := b.core
-	ch, err := msgr.GetChats()
+	ch, err := msgr.GetChats(skip, limit)
 	if err != nil {
 		return "", err
 	}
@@ -112,10 +112,10 @@ func (b *Bridge) GetChats() (string, error) {
 	return res.Serialize()
 }
 
-func (b *Bridge) GetMessages(chatID string) (string, error) {
+func (b *Bridge) GetMessages(chatID string, skip int, limit int) (string, error) {
 	id := entity.ID(chatID)
 	msgr := b.core
-	msgs, err := msgr.GetMessages(id)
+	msgs, err := msgr.GetMessages(id, skip, limit)
 	if err != nil {
 		return "", err
 	}
@@ -144,9 +144,9 @@ func (b *Bridge) SendMessage(chatId string, text string) (string, error) {
 	return bmsg.Serialize()
 }
 
-func (b *Bridge) GetContacts() (string, error) {
+func (b *Bridge) GetContacts(skip int, limit int) (string, error) {
 	msgr := b.core
-	cs, err := msgr.GetContacts()
+	cs, err := msgr.GetContacts(skip, limit)
 	if err != nil {
 		return "", err
 	}
@@ -194,4 +194,8 @@ func (b Bridge) GetPMChat(contactID string) (string, error) {
 	}
 	res := BChat(pm)
 	return res.Serialize()
+}
+
+func (b Bridge) Stop() {
+	b.core.Stop()
 }

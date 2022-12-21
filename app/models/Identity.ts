@@ -14,19 +14,19 @@ export const IdentityModel = types
   .views((self) => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions((self) => {
     const newIdentity = flow(function* newIdentity(name: string) {
-      let idObj = yield api.beeCore.newIdentity(name)
+      let idObj = yield api.beeCore.identity.create(name)
       self.user = { _id: idObj._id, name: idObj.name }
       self.isLoggedIn = true
     })
     const loadIdentity = flow(function* load() {
       try {
-        let hasId = yield api.beeCore.hasIdentity()
+        let hasId = yield api.beeCore.identity.has()
         if (!hasId) {
           self.user = null
           self.isLoggedIn = false
         }
         else {
-          let idObj = yield api.beeCore.getIdentity()
+          let idObj = yield api.beeCore.identity.get()
           self.user = { _id: idObj._id, name: idObj.name }
           self.isLoggedIn = true
         }

@@ -1,18 +1,40 @@
 export interface BeeCoreInstance {
+  chat: IChat
+  pchat: IPrivateChat
+  contact: IContact
+  identity: IIdentity
+  messages: IMessages
   bindService(): Promise<boolean>
-  getIdentity(): Promise<Identity>
-  hasIdentity(): Promise<boolean>
-  newIdentity(name: string): Promise<Identity>
-  getChat(chatId: ID): Promise<Chat>
-  getChatList(): Promise<Chat[]>
-  getChatMessages(id: string): Promise<Message[]>
-  sendChatMessage(chatId: ID, msg: Message): Promise<Message>
   subscribe(callback: (event: any) => void): void
   unsubscribe(): void
-  getContactList(): Promise<Contact[]>
-  newContact(contact: Contact): Promise<void>
-  newPMChat(contact:Contact): Promise<Chat>
-  getPMChat(contact: Contact): Promise<Chat>
+}
+
+export interface IChat {
+  get(id: ID): Promise<Chat>
+  list(skip: number, limit: number):  Promise<Chat[]>
+  send(id: ID, msg: Message): Promise<Message>
+}
+
+export interface IPrivateChat {
+  add(con: Contact): Promise<Chat>
+  get(con: Contact): Promise<Chat>
+}
+
+export interface IMessages {
+  get(id: ID)
+  list(chatID: ID, skip: number, limit: number): Promise<Message[]>
+}
+
+export interface IContact {
+  get(id: ID)
+  add(con: Contact)
+  list(skip: number, limit: number): Promise<Contact[]>
+}
+
+export interface IIdentity {
+  get(): Promise<Identity>
+  has(): Promise<boolean>
+  create(name: string): Promise<Identity>
 }
 
 export type ID = string
@@ -42,6 +64,7 @@ export interface Message {
   sent?: boolean,
   received?: boolean,
   pending?: boolean,
+  failed?: boolean,
 }
 
 export interface Event {

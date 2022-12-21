@@ -63,6 +63,7 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                 .emit(eventName, params);
     }
+
     @ReactMethod
     public void addListener(String eventName) {
         // Set up any upstream listeners or background tasks as necessary
@@ -72,7 +73,6 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
     public void removeListeners(Integer count) {
         // Remove upstream listeners, stop unnecessary background tasks
     }
-
 
     @ReactMethod
     public void startBind(Callback cb) {
@@ -123,9 +123,9 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
     }
 
     @ReactMethod
-    public void getChats(Promise promise) {
+    public void getChats(int skip, int limit, Promise promise) {
         try{
-            String res = cService.getChats();
+            String res = cService.getChats(skip, limit);
             if(res == null) {
                 promise.reject(new Error("failed to get Chats"));
             } else {
@@ -180,9 +180,9 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
     }
 
     @ReactMethod
-    public void getMessages(String chatID,Promise promise) {
+    public void getMessages(String chatID,int skip, int limit,Promise promise) {
         try{
-            String res = cService.getMessages(chatID);
+            String res = cService.getMessages(chatID,skip, limit);
             if(res == null) {
                 promise.reject(new Error("failed to get messages"));
             } else {
@@ -218,9 +218,9 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
     }
 
     @ReactMethod
-    public void getContacts(Promise promise) {
+    public void getContacts(int skip, int limit, Promise promise) {
         try{
-            String res = cService.getContacts();
+            String res = cService.getContacts(skip, limit);
             if(res == null) {
                 promise.reject(new Error("failed to get messages"));
             } else {
