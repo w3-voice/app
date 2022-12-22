@@ -20,7 +20,7 @@ interface ICoreService {
     /**
     * get list of chat info
     */
-    String getChats();
+    String getChats(int skip, int limit);
     /**
     * get contact info
     */
@@ -28,7 +28,7 @@ interface ICoreService {
     /**
     * get all contact info
     */
-    String getContacts();
+    String getContacts(int skip, int limit);
     /**
     * get identity
     */
@@ -40,7 +40,7 @@ interface ICoreService {
     /**
     * get all messages for a chat
     */
-    String getMessages(String id);
+    String getMessages(String chatID,int skip, int limit);
     /**
     * get message by id
     */

@@ -148,10 +148,9 @@ public class CoreService extends Service {
             }
         }
 
-        public String getChats() throws RemoteException {
+        public String getChats(int skip, int limit) throws RemoteException {
             try {
-                Log.d(NAME, core.getChats());
-                return core.getChats();
+                return core.getChats(skip, limit);
             } catch (Exception e) {
                 Log.e(NAME, "can not retrieve chat list", e);
                 return null;
@@ -167,9 +166,9 @@ public class CoreService extends Service {
             }
         }
 
-        public String getContacts() throws RemoteException {
+        public String getContacts(int skip, int limit) throws RemoteException {
             try {
-                return core.getContacts();
+                return core.getContacts(skip, limit);
             } catch (Exception e) {
                 Log.e(NAME, "can not retrieve contact list", e);
                 throw new RemoteException(e.getMessage());
@@ -194,9 +193,9 @@ public class CoreService extends Service {
             }
         }
 
-        public String getMessages(String id) throws RemoteException {
+        public String getMessages(String chatID, int skip, int limit) throws RemoteException {
             try {
-                return core.getMessages(id);
+                return core.getMessages(chatID, skip, limit);
             } catch (Exception e) {
                 Log.e(NAME, "can not retrieve messages", e);
                 return null;

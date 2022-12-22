@@ -30,6 +30,7 @@ func (m *BMessage) cast() Message {
 		Sent:      m.Status == entity.Sent,
 		Received:  m.Status == entity.Seen,
 		Pending:   m.Status == entity.Pending,
+		Failed:    m.Status == entity.Failed,
 	}
 }
 

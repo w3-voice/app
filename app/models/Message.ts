@@ -16,6 +16,7 @@ export const MessageModel = types
     sent: types.maybe(types.boolean),
     received: types.maybe(types.boolean),
     pending: types.maybe(types.boolean),
+    failed: types.maybe(types.boolean),
     image: types.maybe(types.string),
     video: types.maybe(types.string),
     audio: types.maybe(types.string),

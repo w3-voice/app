@@ -31,6 +31,7 @@ import {
   MessageAudioProps,
 } from './Models'
 import { Observer } from 'mobx-react-lite'
+import { MessageStatus } from './MessageStatus'
 
 const styles = {
   left: StyleSheet.create({
@@ -419,24 +420,10 @@ export default class Bubble<
       return null
     }
     if (
-      currentMessage &&
-      (currentMessage.sent || currentMessage.received || currentMessage.pending)
+      currentMessage 
     ) {
       return (
-        <Observer>
-          {()=>        <View style={styles.content.tickView}>
-          {!!currentMessage.sent && (
-            <Text style={[styles.content.tick, this.props.tickStyle]}>✓</Text>
-          )}
-          {!!currentMessage.received && (
-            <Text style={[styles.content.tick, this.props.tickStyle]}>✓</Text>
-          )}
-          {!!currentMessage.pending && (
-            <Text style={[styles.content.tick, this.props.tickStyle]}>🕓</Text>
-          )}
-        </View>}
-        </Observer>
-
+        <MessageStatus id={currentMessage._id}></MessageStatus>
       )
     }
     return null

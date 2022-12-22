@@ -20,6 +20,7 @@ type Message struct {
 	Sent bool `json:"sent"`
 	Received bool `json:"received"`
 	Pending bool `json:"pending"`
+	Failed bool `json:"failed"`
 }
 
 type Contact struct {
