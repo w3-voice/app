@@ -17,7 +17,7 @@ import {
 } from 'react-native'
 
 import { LoadEarlier, LoadEarlierProps } from 'react-native-gifted-chat/lib/LoadEarlier'
-import Message from 'react-native-gifted-chat/lib/Message'
+import Message from './Message'
 import Color from 'react-native-gifted-chat/lib/Color'
 import { User, IMessage, Reply } from './Models'
 import TypingIndicator from 'react-native-gifted-chat/lib/TypingIndicator'

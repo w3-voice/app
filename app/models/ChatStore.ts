@@ -13,13 +13,13 @@ export const ChatStoreModel = types
   .props({
     chats: types.array(ChatModel),
     selected: types.maybeNull(types.reference(ChatModel)),
-    messages:types.array(MessageModel),
+    messages:types.map(MessageModel),
     contacts: types.array(ContactModel),
     newContact: NewContactModel
   })
   .views((self) => ({
      get sortedMessages(){
-      return self.messages.slice().sort((a,b)=> b.createdAt - a.createdAt)
+      return [...self.messages.values()].sort((a,b)=> b.createdAt - a.createdAt)
     }
   })) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions((self) => {
@@ -82,9 +82,12 @@ export const ChatStoreModel = types
     const selectChat = flow(function* selectChat(chatId: string){
       const chat = self.chats.find((item)=>item._id === chatId)
       self.selected = chat
-      const messages = yield api.beeCore.messages.list(chatId,0,20)
+      const messages:Message[] = yield api.beeCore.messages.list(chatId,0,20)
       // console.log(messages)
-      self.messages.replace(messages)
+      messages.forEach(msg => {
+        self.messages.put(msg)
+      });
+      
     })
     const send = flow(function* send(msg: Message){
       let rmsg: Message = yield api.beeCore.chat.send(self.selected._id, {
@@ -95,15 +98,15 @@ export const ChatStoreModel = types
         text: msg.text
       })
       // setMsgs([rmsg, ...self.messages])
-      self.messages.push(rmsg)
+      self.messages.put(rmsg)
     })
     const clear = ()=>{
       self.selected = null
-      self.messages.replace([])
+      self.messages.clear()
     }
     const onMessageChange = flow(function* onMessageChange(id: string, action: string){
       console.log("update message called with ", id, action)
-      if (self.selected !== null && self.messages.length>0){
+      if (self.selected !== null && self.messages.size>0){
         console.log("pass data check")
         try {
           let rmsg: Message = yield api.beeCore.messages.get(id)
@@ -111,20 +114,19 @@ export const ChatStoreModel = types
           if (action === "received"){
             //TODO: Fix It
             if(self.selected._id === rmsg.chatId){
-              self.messages.push(rmsg)
+              self.messages.set(rmsg._id, rmsg)
               // setMsgs([rmsg, ...self.messages])
             }
             // TODO update chat list if chat not exist.   
           }
-          if (self.selected._id === rmsg.chatId && self.selected._id === rmsg.chatId && action === "sent"){
+          if (self.selected._id === rmsg.chatId && self.selected._id === rmsg.chatId && (action === "sent"||action === "failed")){
             let msgg = null
-            let index = self.messages.findIndex((item)=>(item._id === rmsg._id))
-            
-            if(index > -1){
-              console.log("update message status :", index)
-              self.messages[index].onSent()
-              console.log("message status ", self.messages[index])
+            const msg = self.messages.get(rmsg._id)
+            if (msg !== undefined) {
+              msg.onSent()
+              console.log("update message status :")
             }
+        
           }
          
         } catch (error) {
