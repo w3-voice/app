@@ -120,10 +120,16 @@ export const ChatStoreModel = types
             // TODO update chat list if chat not exist.   
           }
           if (self.selected._id === rmsg.chatId && self.selected._id === rmsg.chatId && (action === "sent"||action === "failed")){
-            let msgg = null
             const msg = self.messages.get(rmsg._id)
             if (msg !== undefined) {
-              msg.onSent()
+              switch(action){
+                case "sent": 
+                  msg.onSent()
+                  break
+                case "failed":
+                  msg.onFailed()  
+              }
+              
               console.log("update message status :")
             }
         
