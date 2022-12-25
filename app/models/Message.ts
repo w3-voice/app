@@ -28,6 +28,13 @@ export const MessageModel = types
       self.sent = true
       self.received = false
       self.pending = false
+      self.failed = false
+    },
+    onFailed(){
+      self.sent = false
+      self.received = false
+      self.pending = false
+      self.failed = true
     }
   })) // eslint-disable-line @typescript-eslint/no-unused-vars
 
