@@ -31,7 +31,6 @@ import com.facebook.react.bridge.Arguments;
 import java.lang.ref.WeakReference;
 import java.util.Objects;
 
-import fx.android.core.CoreService;
 import fx.android.core.ICoreService;
 import fx.android.core.IListener;
 import fx.android.core.IEvent;
@@ -77,7 +76,7 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
     @ReactMethod
     public void startBind(Callback cb) {
         mHandler = new InternalHandler(this);
-        Intent intent = new Intent(getCurrentActivity(), CoreService.class);
+        Intent intent = new Intent(getCurrentActivity(), HoodChatService.class);
         Objects.requireNonNull(getCurrentActivity()).bindService(intent, connection, Context.BIND_AUTO_CREATE);
         callBack = cb;
         Log.d(CoreModule.NAME, "client start bind");

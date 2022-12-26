@@ -123,6 +123,15 @@ func (b *Bridge) GetMessages(chatID string, skip int, limit int) (string, error)
 	return res.Serialize()
 }
 
+func (b *Bridge) GetMessageNotification(msgID string) (*Notification, error) {
+	msgr := b.core
+	msg, err := msgr.GetMessage(entity.ID(msgID))
+	if err != nil {
+		return nil, err
+	}
+	return NewNotification(msg.Author.Name,msg.Text), nil
+}
+
 func (b *Bridge) GetMessage(ID string) (string, error) {
 	id := entity.ID(ID)
 	msgr := b.core
