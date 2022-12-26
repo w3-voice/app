@@ -37,7 +37,7 @@
       </activity>
         <service
             android:exported="true"
-            android:name="fx.android.core.CoreService"
+            android:name=".HoodChatService"
             android:process=":coreProcess"
             android:enabled="true" />
     </application>

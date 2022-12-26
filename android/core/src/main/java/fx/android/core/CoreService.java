@@ -1,53 +1,94 @@
 package fx.android.core;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.RemoteException;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
 import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import bridge.Bridge;
 import bridge.Bridge_;
 import bridge.Emitter;
 import bridge.HostConfig;
-
+import bridge.Notification;
+import org.json.*;
 
 public class CoreService extends Service {
+    private static final String TAG = "CoreService";
     private final String NAME = "CoreService";
+    private final String CHANNEL_ID = "111";
     private final String VERSION = "0.0.3";
+    private boolean inited = false;
+    int notificationId = 12;
     Bridge_ core = null;
     String appDir;
     String storeDirPath;
     String path;
     final CoreEmitter emitter = new CoreEmitter();
 
-    int mValue = 0;
-    /**
-     * Class for clients to access.  Because we know this service always
-     * runs in the same process as its clients, we don't need to deal with
-     * IPC.
-     */
+    private final ILocalListener mlistener = event -> {
+        try {
+            Log.i(TAG, ": notification called");
+            showMessageNotification(event.payload);
+        } catch (Exception e) {
+            Log.e(TAG, ": notification failed", e);
+            e.printStackTrace();
+        }
+    };
+
+    public PendingIntent makeIntent() {
+        return null;
+    }
+
+
+    private void init() {
+        createHost();
+        emitter.setLocalListener(mlistener);
+        createNotificationChannel();
+        inited = false;
+    }
+
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         Log.i("IsolatedService", "Task removed in " + this + ": " + rootIntent);
+        core.stop();
         stopSelf();
     }
 
-
-
-    public class LocalBinder extends Binder {
-        CoreService getService() {
-            return CoreService.this;
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.channel_name);
+            String description = getString(R.string.channel_description);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
         }
     }
 
-    synchronized void createHost(){
+
+    private synchronized void createHost(){
         Context context = getApplicationContext();
         appDir = context.getFilesDir().toString();
         storeDirPath = appDir + "/bee/received/";
@@ -82,44 +123,51 @@ public class CoreService extends Service {
 
     @Override
     public void onCreate() {
-        if (core == null){
-            createHost();
+        if (!inited){
+            init();
         }
-        Toast.makeText(this, R.string.local_service_started, Toast.LENGTH_LONG).show();
-        // Display a notification about us starting.  We put an icon in the status bar.
+    }
+
+    public void showMessageNotification(String msgID) throws Exception {
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+        Notification n = core.getMessageNotification(msgID);
+        Log.i(TAG, "showMessageNotification: "+n.getText()+" "+n.getTitle());
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_stat_onesignal_default)
+                .setContentTitle(n.getTitle())
+                .setContentText(n.getText())
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+        PendingIntent p = makeIntent();
+        if (p != null){
+            builder.setContentIntent(p);
+        }
+        notificationManager.notify(notificationId, builder.build());
+        notificationId += 1;
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (core == null){
-            createHost();
+        if (!inited){
+            init();
         }
-//        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-        Log.i(NAME, "Received start id " + startId + ": " + intent);
-//        Toast.makeText(this, "Background Service Created", Toast.LENGTH_LONG).show();
-//        showNotification();
         return START_REDELIVER_INTENT;
     }
+
     @Override
     public void onDestroy() {
-        // Cancel the persistent notification.
-//        mNM.cancel(NOTIFICATION);
-        // Tell the user we stopped.
         Log.i(NAME, "core service destroyed");
+        core.stop();
         Toast.makeText(this, R.string.local_service_stopped, Toast.LENGTH_SHORT).show();
     }
+
     @Override
     public IBinder onBind(Intent intent) {
         Log.i(NAME, "client requested for bind");
-        if (core == null){
-            createHost();
-        }
         return binder;
     }
+
     // This is the object that receives interactions from clients.  See
     // RemoteService for a more complete example.
-    private final IBinder mBinder = new LocalBinder();
-
     private final ICoreService.Stub binder = new ICoreService.Stub() {
         public void registerListener(IListener cb) {
             if (cb != null) emitter.addListener(cb);
