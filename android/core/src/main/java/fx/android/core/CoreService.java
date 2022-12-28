@@ -160,9 +160,24 @@ public class CoreService extends Service {
         notificationId += 1;
     }
 
+    public void showServiceNotification() {
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_stat_onesignal_default)
+                .setContentTitle("HoodChat")
+                .setContentText("background service")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+        PendingIntent p = makeIntent();
+        if (p != null) {
+            builder.setContentIntent(p);
+        }
+        startForeground(1, builder.build());
+    }
+
     @Override
     public void onCreate() {
         if (!inited && instance == null) {
+            super.onCreate();
             instance = this;
             init();
         }
@@ -173,7 +188,8 @@ public class CoreService extends Service {
         if (!inited) {
             init();
         }
-        return START_REDELIVER_INTENT;
+        showServiceNotification();
+        return START_STICKY;
     }
 
     @Override

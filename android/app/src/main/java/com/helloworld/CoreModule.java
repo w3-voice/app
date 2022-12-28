@@ -61,7 +61,7 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
     private void startService() {
         Intent intent = new Intent(getCurrentActivity(), HoodChatService.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startService(intent);
+            context.startForegroundService(intent);
         }else{
             context.startService(intent);
         }
@@ -320,10 +320,11 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
+            cBound = true;
             callBack.invoke(true);
             callBack = null;
             Log.d(CoreModule.NAME, "client connected to service");
-            cBound = true;
+
         }
 
         @Override
