@@ -56,15 +56,16 @@ func (b *Bridge) GetInterfaces() (string, error) {
 	if err != nil {
 		panic("manet not work")
 	}
-	addr, err := ma.NewMultiaddr("/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN")
-	if err != nil {
-		panic("cant parse ma adder")
-	}
-	_, err = madns.Resolve(context.Background(), addr)
-	if err != nil {
-		log.Debugf("can not resolve host: %s", err.Error())
-		// panic("madns not work")
-	}
+	// test dns and mdns diable for production
+	// addr, err := ma.NewMultiaddr("/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN")
+	// if err != nil {
+	// 	panic("cant parse ma adder")
+	// }
+	// _, err = madns.Resolve(context.Background(), addr)
+	// if err != nil {
+	// 	log.Debugf("can not resolve host: %s", err.Error())
+	// 	// panic("madns not work")
+	// }
 	sAdders := make([]string, 0)
 	for _, val := range adders {
 		sAdders = append(sAdders, val.String())
