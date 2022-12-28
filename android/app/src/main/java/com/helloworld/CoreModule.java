@@ -6,8 +6,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Message;
 import android.os.RemoteException;
 
@@ -39,14 +41,52 @@ import fx.android.core.IEvent;
 @ReactModule(name = CoreModule.NAME)
 public class CoreModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
     public static final String NAME = "CoreModule";
+    private static final String TAG = NAME;
     ICoreService cService = null;
     Callback callBack = null;
     boolean cBound = false;
+    final Handler timeoutHandler = new Handler(Looper.getMainLooper());
     ReactApplicationContext context = null;
     private InternalHandler mHandler;
     public CoreModule(ReactApplicationContext reactContext) throws Exception {
         super(reactContext);
         context = reactContext;
+    }
+
+    private boolean bindRequest(){
+        Intent intent = new Intent(getCurrentActivity(), HoodChatService.class);
+        return Objects.requireNonNull(getCurrentActivity()).bindService(intent, connection, Context.BIND_AUTO_CREATE);
+    }
+
+    private void startService() {
+        Intent intent = new Intent(getCurrentActivity(), HoodChatService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startService(intent);
+        }else{
+            context.startService(intent);
+        }
+    }
+
+    private boolean recoverService(int retry) {
+        while (retry>0) {
+            if (bindRequest()) {
+                Log.d(TAG, "service recovered");
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if(cBound){
+                    return true;
+                }
+            }
+            Log.d(TAG, "start service try: " + retry);
+            startService();
+
+            retry -= 1;
+        }
+        return false;
+
     }
 
     @Override
@@ -76,10 +116,17 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
     @ReactMethod
     public void startBind(Callback cb) {
         mHandler = new InternalHandler(this);
-        Intent intent = new Intent(getCurrentActivity(), HoodChatService.class);
-        Objects.requireNonNull(getCurrentActivity()).bindService(intent, connection, Context.BIND_AUTO_CREATE);
+        bindRequest();
         callBack = cb;
-        Log.d(CoreModule.NAME, "client start bind");
+        timeoutHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if(!cBound){
+                    recoverService(5);
+                }
+            }
+        }, 500);
+
     }
 
     @ReactMethod
@@ -281,11 +328,13 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
+            Log.d(arg0.getClassName(), "client disconnected");
             if (callBack != null){
                 callBack.invoke(false);
+                callBack = null;
+            } else {
+                cBound = recoverService(5);
             }
-            cBound = false;
-            Log.d(arg0.getClassName(), "client disconnected");
         }
 
     };

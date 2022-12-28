@@ -44,8 +44,7 @@ public class MainActivity extends ReactActivity {
 
     RNBootSplash.init(this);            // <- initialize the splash screen
     super.onCreate(null);
-    startService(new Intent(MainActivity.this, HoodChatService.class));
-    Log.d("MainActivity", "start service");
+
     // or super.onCreate(savedInstanceState) when not using react-native-screens
   }
 
@@ -68,16 +67,6 @@ public class MainActivity extends ReactActivity {
       // More on this on https://reactjs.org/blog/2022/03/29/react-v18.html
       return BuildConfig.IS_NEW_ARCHITECTURE_ENABLED;
     }
-  }
-
-  private boolean isMyServiceRunning(Class<?> serviceClass) {
-    ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-    for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-      if (serviceClass.getName().equals(service.service.getClassName())) {
-        return true;
-      }
-    }
-    return false;
   }
 
 }
