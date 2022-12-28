@@ -74,7 +74,7 @@ function App(props: AppProps) {
     // Slightly delaying splash screen hiding for better UX; can be customized or removed as needed,
     // Note: (vanilla Android) The splash-screen will not appear if you launch your app via the terminal or Android Studio. Kill the app and launch it normally by tapping on the launcher icon. https://stackoverflow.com/a/69831106
     // Note: (vanilla iOS) You might notice the splash-screen logo change size. This happens in debug/development mode. Try building the app for release.
-    
+    setTimeout(hideSplashScreen, 500)
   })
 
   // Before we show the app, we have to wait for our state to be ready.
@@ -85,17 +85,6 @@ function App(props: AppProps) {
   // You can replace with your own loading component if you wish.
   if (!rehydrated || !isNavigationStateRestored || !areFontsLoaded ) return null
 
-  // otherwise, we're ready to render the app
-  setTimeout(hideSplashScreen, 500)
-      
-  // useEffect(()=>{
-  //   const {chatStore:{reloadMsgs}} = useStores()
-  //   api.beeCore.subscribe((event)=>{
-  //     if(event.name == "ChangeMessageStatus" && event.group == "Messaging"){
-  //       reloadMsgs()
-  //     }
-  //   })
-  // },[])
 
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>

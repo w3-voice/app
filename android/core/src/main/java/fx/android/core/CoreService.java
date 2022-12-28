@@ -26,20 +26,38 @@ import bridge.Bridge_;
 import bridge.Emitter;
 import bridge.HostConfig;
 import bridge.Notification;
+
 import org.json.*;
 
 public class CoreService extends Service {
+    private static CoreService instance = null;
     private static final String TAG = "CoreService";
     private final String NAME = "CoreService";
     private final String CHANNEL_ID = "111";
     private final String VERSION = "0.0.3";
     private boolean inited = false;
     int notificationId = 12;
-    Bridge_ core = null;
+    private Bridge_ core = null;
     String appDir;
     String storeDirPath;
     String path;
     final CoreEmitter emitter = new CoreEmitter();
+
+    public static boolean isServiceCreated() {
+        return instance != null;
+    }
+
+    public boolean healthCheck() {
+        try {
+            if (instance != null && core != null) {
+                core.isLogin();
+                return true;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+        return false;
+    }
 
     private final ILocalListener mlistener = event -> {
         try {
@@ -57,7 +75,10 @@ public class CoreService extends Service {
 
 
     private void init() {
-        createHost();
+        while(!healthCheck()){
+            createHost();
+
+        }
         emitter.setLocalListener(mlistener);
         createNotificationChannel();
         inited = false;
@@ -88,7 +109,7 @@ public class CoreService extends Service {
     }
 
 
-    private synchronized void createHost(){
+    private synchronized void createHost() {
         Context context = getApplicationContext();
         appDir = context.getFilesDir().toString();
         storeDirPath = appDir + "/bee/received/";
@@ -98,10 +119,10 @@ public class CoreService extends Service {
         if (!storeDir.exists()) {
             success = storeDir.mkdirs();
         }
-        if(success){
-            Log.d(NAME,"store folder created");
-        }else{
-            Log.d(NAME,"store exist");
+        if (success) {
+            Log.d(NAME, "store folder created");
+        } else {
+            Log.d(NAME, "store exist");
         }
         try {
             Log.i(NAME, "core service stared");
@@ -116,47 +137,66 @@ public class CoreService extends Service {
             String s1 = this.core.getInterfaces();
             Log.d(NAME, "driver" + s1);
         } catch (Exception e) {
-            Log.e(NAME,"failed to start core service", e);
+            this.core = null;
+            Log.e(NAME, "failed to start core service", e);
             e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void onCreate() {
-        if (!inited){
-            init();
         }
     }
 
     public void showMessageNotification(String msgID) throws Exception {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
         Notification n = core.getMessageNotification(msgID);
-        Log.i(TAG, "showMessageNotification: "+n.getText()+" "+n.getTitle());
+        Log.i(TAG, "showMessageNotification: " + n.getText() + " " + n.getTitle());
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_stat_onesignal_default)
                 .setContentTitle(n.getTitle())
                 .setContentText(n.getText())
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);
         PendingIntent p = makeIntent();
-        if (p != null){
+        if (p != null) {
             builder.setContentIntent(p);
         }
         notificationManager.notify(notificationId, builder.build());
         notificationId += 1;
     }
 
+    public void showServiceNotification() {
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_stat_onesignal_default)
+                .setContentTitle("HoodChat")
+                .setContentText("background service")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+        PendingIntent p = makeIntent();
+        if (p != null) {
+            builder.setContentIntent(p);
+        }
+        startForeground(1, builder.build());
+    }
+
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        if (!inited){
+    public void onCreate() {
+        if (!inited && instance == null) {
+            super.onCreate();
+            instance = this;
             init();
         }
-        return START_REDELIVER_INTENT;
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (!inited) {
+            init();
+        }
+        showServiceNotification();
+        return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
         Log.i(NAME, "core service destroyed");
         core.stop();
+        instance = null;
         Toast.makeText(this, R.string.local_service_stopped, Toast.LENGTH_SHORT).show();
     }
 
@@ -166,12 +206,32 @@ public class CoreService extends Service {
         return binder;
     }
 
-    // This is the object that receives interactions from clients.  See
-    // RemoteService for a more complete example.
+
+
+    // Core API service for isolated service
     private final ICoreService.Stub binder = new ICoreService.Stub() {
+
+        private boolean handleCoreException(boolean type, Exception e, String msg){
+            Log.e("CoreService", msg, e);
+            if (!healthCheck()){
+                init();
+            }
+            return  type;
+        }
+
+
+        private String handleCoreException(String type, Exception e, String msg){
+            Log.e("CoreService", msg, e);
+            if (!healthCheck()){
+                init();
+            }
+            return type;
+        }
+
         public void registerListener(IListener cb) {
             if (cb != null) emitter.addListener(cb);
         }
+
         public void unregisterListener(IListener cb) {
             if (cb != null) emitter.removeListener(cb);
         }
@@ -181,18 +241,15 @@ public class CoreService extends Service {
                 core.addContact(id, name);
                 return true;
             } catch (Exception e) {
-                Log.e("CoreService", "can not add contact", e);
-                return false;
+                return handleCoreException(false, e,"can not add contact");
             }
         }
 
         public String getChat(String id) throws RemoteException {
             try {
-                String res = core.getChat(id);
-                return res;
+                return core.getChat(id);
             } catch (Exception e) {
-                Log.e(NAME, "can not retrieve chat", e);
-                return null;
+                return handleCoreException(null, e,"failed to retrieve chat");
             }
         }
 
@@ -200,8 +257,7 @@ public class CoreService extends Service {
             try {
                 return core.getChats(skip, limit);
             } catch (Exception e) {
-                Log.e(NAME, "can not retrieve chat list", e);
-                return null;
+                return handleCoreException(null, e,"failed to retrieve chat");
             }
         }
 
@@ -209,8 +265,7 @@ public class CoreService extends Service {
             try {
                 return core.getContact(id);
             } catch (Exception e) {
-                Log.e(NAME, "can not retrieve contact", e);
-                return null;
+                return handleCoreException(null, e,"failed to retrieve contact");
             }
         }
 
@@ -218,8 +273,7 @@ public class CoreService extends Service {
             try {
                 return core.getContacts(skip, limit);
             } catch (Exception e) {
-                Log.e(NAME, "can not retrieve contact list", e);
-                throw new RemoteException(e.getMessage());
+                return handleCoreException(null, e,"failed to retrieve contact list");
             }
         }
 
@@ -227,8 +281,7 @@ public class CoreService extends Service {
             try {
                 return core.getIdentity();
             } catch (Exception e) {
-                Log.e(NAME, "can not retrieve identity", e);
-                return null;
+                return handleCoreException(null, e,"failed to retrieve identity");
             }
         }
 
@@ -236,8 +289,7 @@ public class CoreService extends Service {
             try {
                 return core.newIdentity(name);
             } catch (Exception e) {
-                Log.e(NAME, "can not retrieve identity", e);
-                return null;
+                return handleCoreException(null, e,"failed to retrieve create identity");
             }
         }
 
@@ -245,8 +297,7 @@ public class CoreService extends Service {
             try {
                 return core.getMessages(chatID, skip, limit);
             } catch (Exception e) {
-                Log.e(NAME, "can not retrieve messages", e);
-                return null;
+                return handleCoreException(null, e,"failed to retrieve message list");
             }
         }
 
@@ -255,7 +306,7 @@ public class CoreService extends Service {
                 return core.getMessage(id);
             } catch (Exception e) {
                 Log.e(NAME, "can not retrieve messages", e);
-                return null;
+                return handleCoreException(null, e,"failed to retrieve message");
             }
         }
 
@@ -263,8 +314,7 @@ public class CoreService extends Service {
             try {
                 return core.isLogin();
             } catch (Exception e) {
-                Log.e(NAME, "can not call is login", e);
-                return false;
+                return handleCoreException(false, e,"failed to check login");
             }
         }
 
@@ -272,8 +322,7 @@ public class CoreService extends Service {
             try {
                 return core.newPMChat(contactID);
             } catch (Exception e) {
-                Log.e(NAME, "failed to create new chat", e);
-                return null;
+                return handleCoreException(null, e,"failed to create new private chat");
             }
         }
 
@@ -281,8 +330,7 @@ public class CoreService extends Service {
             try {
                 return core.getPMChat(contactID);
             } catch (Exception e) {
-                Log.e(NAME, "failed to create new chat", e);
-                return null;
+                return handleCoreException(null, e,"failed to retrieve private chat");
             }
         }
 
@@ -291,8 +339,7 @@ public class CoreService extends Service {
             try {
                 return core.sendMessage(chatID, text);
             } catch (Exception e) {
-                Log.e(NAME, "can not send message", e);
-                return null;
+                return handleCoreException(null, e,"failed to send private message");
             }
         }
     };
