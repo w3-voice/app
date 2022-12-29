@@ -62,7 +62,12 @@ public class CoreService extends Service {
     private final ILocalListener mlistener = event -> {
         try {
             Log.i(TAG, ": notification called");
-            showMessageNotification(event.payload);
+            switch (event.action){
+                case "received": showMessageNotification(event.payload);
+                break;
+                // Todo: I still don't know what to do with action.
+            }
+
         } catch (Exception e) {
             Log.e(TAG, ": notification failed", e);
             e.printStackTrace();
