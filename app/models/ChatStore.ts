@@ -1,4 +1,4 @@
-import {  flow, Instance, SnapshotIn, SnapshotOut, types } from "mobx-state-tree"
+import { flow, Instance, SnapshotIn, SnapshotOut, types } from "mobx-state-tree"
 import { ChatModel, Chat } from "./Chat"
 import { api } from "../services/core"
 import { Message, MessageModel } from "./Message"
@@ -13,26 +13,26 @@ export const ChatStoreModel = types
   .props({
     chats: types.array(ChatModel),
     selected: types.maybeNull(types.reference(ChatModel)),
-    messages:types.map(MessageModel),
+    messages: types.map(MessageModel),
     contacts: types.array(ContactModel),
     newContact: NewContactModel
   })
   .views((self) => ({
-     get sortedMessages(){
-      return [...self.messages.values()].sort((a,b)=> b.createdAt - a.createdAt)
+    get sortedMessages() {
+      return [...self.messages.values()].sort((a, b) => b.createdAt - a.createdAt)
     }
   })) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions((self) => {
-    const loadContact = flow(function* loadContact(){
-      const list = yield api.beeCore.contact.list(0,50)
+    const loadContact = flow(function* loadContact() {
+      const list = yield api.beeCore.contact.list(0, 50)
       self.contacts.replace(list)
     })
-    const addContactAndCreateChat = flow(function* loadContact(){
+    const addContactAndCreateChat = flow(function* loadContact() {
       yield addContacts()
       yield createPMChat(self.newContact._id)
     })
-    const addContacts = flow(function* addContacts(){
-      const newContact = {...self.newContact}
+    const addContacts = flow(function* addContacts() {
+      const newContact = { ...self.newContact }
       try {
         yield api.beeCore.contact.add(newContact)
         self.contacts.push(newContact)
@@ -40,59 +40,59 @@ export const ChatStoreModel = types
         console.log("failed to create new contract", error)
       }
     })
-    const openPMChat = flow(function* openChat(contactId: string){
+    const openPMChat = flow(function* openChat(contactId: string) {
       let done = false;
-      const contact = self.contacts.find(item=>item._id===contactId)
+      const contact = self.contacts.find(item => item._id === contactId)
       try {
         const chat: Chat = yield api.beeCore.pchat.get(contact)
-        let exist = self.chats.find(item=>item._id === chat._id)
-        if (!exist){
+        let exist = self.chats.find(item => item._id === chat._id)
+        if (!exist) {
           self.chats.push(chat)
         }
         selectChat(chat._id)
-        done = true;        
+        done = true;
       } catch (error) {
-        console.log("can not open chat",error)
+        console.log("can not open chat", error)
       }
 
-      if(!done){
+      if (!done) {
         try {
           const chat: Chat = yield api.beeCore.pchat.add(contact)
           self.chats.push(chat)
           selectChat(chat._id)
-          done = true;        
+          done = true;
         } catch (error) {
-          console.log("can not create chat",error)
+          console.log("can not create chat", error)
         }
       }
-      if(!done){
+      if (!done) {
         throw "can not open chat"
       }
     })
-    const createPMChat = flow(function* createChat(contactId: string){
-      const contact = self.contacts.find(item=>item._id===contactId)
+    const createPMChat = flow(function* createChat(contactId: string) {
+      const contact = self.contacts.find(item => item._id === contactId)
       const newChat: Chat = yield api.beeCore.pchat.add(contact)
       self.chats.push(newChat)
       selectChat(newChat._id)
     })
-    const loadChatList = flow(function* loadChatList(){
+    const loadChatList = flow(function* loadChatList() {
       const list = yield api.beeCore.chat.list(0, 50)
       self.chats.replace(list)
     })
-    const selectChat = flow(function* selectChat(chatId: string){
-      const chat = self.chats.find((item)=>item._id === chatId)
+    const selectChat = flow(function* selectChat(chatId: string) {
+      const chat = self.chats.find((item) => item._id === chatId)
       self.selected = chat
-      const messages:Message[] = yield api.beeCore.messages.list(chatId,0,20)
+      const messages: Message[] = yield api.beeCore.messages.list(chatId, 0, 20)
       // console.log(messages)
       messages.forEach(msg => {
         self.messages.put(msg)
       });
-      
+
     })
-    const send = flow(function* send(msg: Message){
+    const send = flow(function* send(msg: Message) {
       let rmsg: Message = yield api.beeCore.chat.send(self.selected._id, {
         _id: msg._id,
-        chatId : "",
+        chatId: "",
         createdAt: msg.createdAt,
         user: msg.user._id,
         text: msg.text
@@ -100,48 +100,53 @@ export const ChatStoreModel = types
       // setMsgs([rmsg, ...self.messages])
       self.messages.put(rmsg)
     })
-    const clear = ()=>{
+    const clear = () => {
       self.selected = null
       self.messages.clear()
     }
-    const onMessageChange = flow(function* onMessageChange(id: string, action: string){
+    const onMessageChange = flow(function* onMessageChange(id: string, action: string) {
+      //Todo: to much if and else need to clean it up 
       console.log("update message called with ", id, action)
-      if (self.selected !== null && self.messages.size>0){
+      if (self.selected !== null && self.messages.size > 0) {
         console.log("pass data check")
         try {
           let rmsg: Message = yield api.beeCore.messages.get(id)
-          console.log(rmsg._id,rmsg.chatId)
-          if (action === "received"){
+          console.log(rmsg._id, rmsg.chatId)
+          if (action === "received") {
             //TODO: Fix It
-            if(self.selected._id === rmsg.chatId){
+            if (self.selected._id === rmsg.chatId) {
               self.messages.set(rmsg._id, rmsg)
-              // setMsgs([rmsg, ...self.messages])
+            }else {
+              if (!self.chats.map(i=>i._id).includes(rmsg.chatId)){
+                let newCH: Chat = yield api.beeCore.chat.get(rmsg.chatId)
+                self.chats.push(newCH);
+              }
             }
-            // TODO update chat list if chat not exist.   
+           
           }
-          if (self.selected._id === rmsg.chatId && self.selected._id === rmsg.chatId && (action === "sent"||action === "failed")){
+          if (self.selected._id === rmsg.chatId && self.selected._id === rmsg.chatId && (action === "sent" || action === "failed")) {
             const msg = self.messages.get(rmsg._id)
             if (msg !== undefined) {
-              switch(action){
-                case "sent": 
+              switch (action) {
+                case "sent":
                   msg.onSent()
                   break
                 case "failed":
-                  msg.onFailed()  
+                  msg.onFailed()
               }
-              
+
               console.log("update message status :")
             }
-        
+
           }
-         
+
         } catch (error) {
           console.log(error)
         }
 
       }
     })
-    const afterCreate = flow(function* afterCreate(){
+    const afterCreate = flow(function* afterCreate() {
       yield loadChatList()
       yield loadContact()
     })
@@ -160,7 +165,7 @@ export const ChatStoreModel = types
     }
   }) // eslint-disable-line @typescript-eslint/no-unused-vars
 
-export interface ChatList extends Instance<typeof ChatStoreModel> {}
-export interface ChatListSnapshotOut extends SnapshotOut<typeof ChatStoreModel> {}
-export interface ChatListSnapshotIn extends SnapshotIn<typeof ChatStoreModel> {}
+export interface ChatList extends Instance<typeof ChatStoreModel> { }
+export interface ChatListSnapshotOut extends SnapshotOut<typeof ChatStoreModel> { }
+export interface ChatListSnapshotIn extends SnapshotIn<typeof ChatStoreModel> { }
 export const createChatListDefaultModel = () => types.optional(ChatStoreModel, {})
