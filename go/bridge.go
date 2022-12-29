@@ -1,15 +1,12 @@
 package bridge
 
 import (
-	"context"
 	"strings"
 
 	"github.com/hood-chat/core"
 	"github.com/hood-chat/core/entity"
 	"github.com/hood-chat/core/event"
 	logging "github.com/ipfs/go-log/v2"
-	ma "github.com/multiformats/go-multiaddr"
-	madns "github.com/multiformats/go-multiaddr-dns"
 	manet "github.com/multiformats/go-multiaddr/net"
 )
 
