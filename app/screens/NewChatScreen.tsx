@@ -2,7 +2,7 @@ import React, { FC } from "react"
 import { observer } from "mobx-react-lite"
 import { FlatList, View, ViewStyle } from "react-native"
 import { StackScreenProps } from "@react-navigation/stack"
-import { AppStackScreenProps } from "../navigators"
+import { AppStackScreenProps, ChatScreenProps } from "../navigators"
 import { ListItem, Screen, Text, Button } from "../components"
 import { useNavigation } from "@react-navigation/native"
 import { useStores } from "../models"
@@ -11,7 +11,7 @@ import { FAB } from 'react-native-paper';
 import { List } from 'react-native-paper';
 
 
-export const NewChatScreen: FC<StackScreenProps<AppStackScreenProps, "NewChat">> = observer(function NewChatScreen() {
+export const NewChatScreen: FC<StackScreenProps<ChatScreenProps<"NewChat">>> = observer(function NewChatScreen() {
  // Pull in one of our MST stores
  const { chatStore: {contacts, openPMChat} } = useStores()
  

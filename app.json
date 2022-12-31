@@ -1,6 +1,16 @@
 {
   "name": "HelloWorld",
   "displayName": "HelloWorld",
+  "plugins": [
+    [
+      "react-native-vision-camera",
+      {
+        "cameraPermissionText": "$(PRODUCT_NAME) needs access to your Camera.",
+        "enableMicrophonePermission": false,
+        "microphonePermissionText": "$(PRODUCT_NAME) needs access to your Microphone."
+      }
+    ]
+  ],
   "expo": {
     "name": "HelloWorld",
     "slug": "HelloWorld",

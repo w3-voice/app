@@ -3,7 +3,7 @@ import { FlatList, View } from 'react-native';
 import { observer } from "mobx-react-lite"
 import { ViewStyle } from "react-native"
 import { StackScreenProps } from "@react-navigation/stack"
-import { AppStackScreenProps } from "../navigators"
+import { AppStackScreenProps, ChatScreenProps } from "../navigators"
 import { Screen } from "../components"
 import { useNavigation } from "@react-navigation/native"
 import { useStores } from "../models"
@@ -12,7 +12,7 @@ import { List } from 'react-native-paper';
 
 
 
-export const ChatListScreen: FC<StackScreenProps<AppStackScreenProps, "ChatList">> = observer(function ChatListScreen() {
+export const ChatListScreen: FC<StackScreenProps<ChatScreenProps<"ChatList">>> = observer(function ChatListScreen() {
   // Pull in one of our MST stores
   const { chatStore } = useStores()
   const navigateItem = (id) => {
