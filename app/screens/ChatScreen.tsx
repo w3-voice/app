@@ -8,7 +8,7 @@ import { useStores } from "../models"
 
 export const ChatScreen: FC<StackScreenProps<ChatScreenProps<"ChatList">>> = observer(function ChatScreen() {
   // Pull in one of our MST stores
-  const { chatStore: {sortedMessages, send} , identity } = useStores()
+  const { chatStore: {sortedMessages, send, loadEarlierMessages} , identity } = useStores()
 
   return (
     <GiftedChat
@@ -19,6 +19,9 @@ export const ChatScreen: FC<StackScreenProps<ChatScreenProps<"ChatList">>> = obs
         messages.map(msg=>send(msg))
       }}
       user={identity.user}
+      loadEarlier={true}
+      onLoadEarlier={loadEarlierMessages}
+      infiniteScroll={true}
     />
   )
 })
