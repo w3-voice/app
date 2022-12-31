@@ -3,9 +3,11 @@ import { Platform } from 'react-native'
 import { Appbar,Menu } from 'react-native-paper';
 import { useStores } from '../models';
 import Clipboard from '@react-native-clipboard/clipboard';
+import { StackHeaderProps } from '@react-navigation/stack';
+import { Header } from './Header';
 const MORE_ICON = Platform.OS === 'ios' ? 'dots-horizontal' : 'dots-vertical';
 
-export function PaperHeader({ navigation, back  }) {
+export function PaperHeader(props: StackHeaderProps) {
     const [visible, setVisible] = React.useState(false);
     const openMenu = () => setVisible(true);
     const closeMenu = () => setVisible(false);
@@ -14,20 +16,20 @@ export function PaperHeader({ navigation, back  }) {
     const copyID = () => {
       console.log("copy identity",_id)
       Clipboard.setString(_id)
-      navigation.navigate("QRCodeModal")
+      props.navigation.navigate("QRCodeModal")
       closeMenu()
     }
 
-    const scanNewContact = ()=>{
-      navigation.navigate("ScanNewContact")
+    const newContact = ()=>{
+      props.navigation.navigate("NewContact")
     }
 
   
     return (
       <Appbar.Header>
-        {back ? <Appbar.BackAction onPress={navigation.goBack} /> : null}
-        <Appbar.Content title="Hood" />
-        {!back ? (
+        {props.back ? <Appbar.BackAction onPress={props.navigation.goBack} /> : null}
+        <Appbar.Content title={props.options.title} />
+        {!props.back ? (
           <Menu
             visible={visible}
             onDismiss={closeMenu}
@@ -35,7 +37,7 @@ export function PaperHeader({ navigation, back  }) {
               <Appbar.Action icon={MORE_ICON} color="black" onPress={openMenu} />
             }>
             <Menu.Item onPress={copyID} title="ID" />
-            <Menu.Item onPress={scanNewContact} title="Scan Contact" />
+            <Menu.Item onPress={newContact} title="New Contact" />
           </Menu>
         ) : null}
       </Appbar.Header>

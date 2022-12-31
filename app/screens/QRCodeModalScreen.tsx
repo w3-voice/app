@@ -21,10 +21,12 @@ export const QRCodeModalScreen: FC<StackScreenProps<ChatScreenProps<"QRCodeModal
     return (
         <Portal>
             <Modal visible={visibility} onDismiss={dismiss} contentContainerStyle={$containerStyle}>
+                
                 <QRCode
                     value={`/p2p/${identity.user._id}/@${identity.user.name}`}
                     size={250}
                 />
+                <Text style={$textStyle}>ID copied to clipboard</Text>
             </Modal>
         </Portal>
     )
@@ -34,7 +36,11 @@ const $containerStyle: ViewStyle = {
     backgroundColor: 'white',
     padding: 50,
     display: "flex",
-    justifyContent: "center",
-    flexDirection: 'row'
-    
+    justifyContent: 'center',
+    flexDirection: 'column' 
+}
+
+const $textStyle: ViewStyle = {
+    paddingTop: 30,
+    alignSelf: 'center'
 }

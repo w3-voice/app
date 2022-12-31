@@ -33,14 +33,7 @@ export const CreateIdentityScreen: FC<StackScreenProps<AppStackScreenProps<"Crea
         onChangeText={setName}
         containerStyle={$textField}
         autoCapitalize="none"
-        autoComplete="email"
         autoCorrect={false}
-        keyboardType="email-address"
-        labelTx="createIdentity.instruction"
-        placeholderTx="createIdentity.instruction"
-        // helper={errors?.authEmail}
-        // status={errors?.authEmail ? "error" : undefined}
-        // onSubmitEditing={() => authPasswordInput.current?.focus()}
       />
 
       <Button

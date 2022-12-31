@@ -51,7 +51,7 @@ const renderItem = ({ item }) => (
      </Screen>
      <View style={$fixedView}>
         <FAB
-          icon="plus"
+          icon="account-plus"
           style={$fab}
           onPress={newContact}
         />

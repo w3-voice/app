@@ -39,12 +39,21 @@ export const ChatNavigator = () => {
         header: (props) => <PaperHeader {...props} /> }}>
         <Stack.Screen name="ChatList"
           component={ChatListScreen}
-          options={{ title: 'Hood' }}
+          options={{ title: 'Hello World' }}
         />
         <Stack.Screen name="Chat" component={ChatScreen} />
-        <Stack.Screen name="NewChat" component={NewChatScreen} />
-        <Stack.Screen name="NewContact" component={NewContactScreen} />
-        <Stack.Screen name="ScanNewContact" component={QRCodeScannerScreen} />
+        <Stack.Screen name="NewChat" 
+          component={NewChatScreen} 
+          options={{ title: 'New Message' }}
+        />
+        <Stack.Screen name="NewContact"
+          component={NewContactScreen}
+          options={{ title: 'New Contact' }}
+         />
+        <Stack.Screen name="ScanNewContact"
+         component={QRCodeScannerScreen} 
+         options={{ title: 'Scan Contact' }}
+         />
       </Stack.Group>
       <Stack.Group screenOptions={{ presentation: 'modal',headerShown: false }}>
         <Stack.Screen name="QRCodeModal" component={QRCodeModalScreen} />

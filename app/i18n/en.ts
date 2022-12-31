@@ -4,9 +4,23 @@ const en = {
     cancel: "Cancel",
     back: "Back",
   },
+  createContact: {
+    title:"New Contact",
+    message: "Add a new Contact",
+    name: {
+      label: "Contact Name",
+      placeholder: ""
+    },
+    id: {
+      label: "Contact ID",
+      placeholder: ""
+    } ,
+    btSave: "Save Contact",
+    btScan: "Scan Contact"
+  },
   createIdentity: {
     title:"Create new identity",
-    message: "Welcome to Bee Messenger",
+    message: "Welcome to Messenger",
     instruction: "Please Enter User Name",
   },
   errorScreen: {
