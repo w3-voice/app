@@ -7,7 +7,12 @@ const plugins = [
   ],
   ["@babel/plugin-proposal-optional-catch-binding"],
   'react-native-paper/babel',
-  "react-native-reanimated/plugin", // NOTE: this must be last in the plugins
+  [
+    'react-native-reanimated/plugin',
+    {
+      globals: ['__scanCodes'],
+    },
+  ] // NOTE: this must be last in the plugins
 ]
 
 const production = {

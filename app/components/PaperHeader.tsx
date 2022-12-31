@@ -14,7 +14,12 @@ export function PaperHeader({ navigation, back  }) {
     const copyID = () => {
       console.log("copy identity",_id)
       Clipboard.setString(_id)
+      navigation.navigate("QRCodeModal")
       closeMenu()
+    }
+
+    const scanNewContact = ()=>{
+      navigation.navigate("ScanNewContact")
     }
 
   
@@ -30,6 +35,7 @@ export function PaperHeader({ navigation, back  }) {
               <Appbar.Action icon={MORE_ICON} color="black" onPress={openMenu} />
             }>
             <Menu.Item onPress={copyID} title="ID" />
+            <Menu.Item onPress={scanNewContact} title="Scan Contact" />
           </Menu>
         ) : null}
       </Appbar.Header>

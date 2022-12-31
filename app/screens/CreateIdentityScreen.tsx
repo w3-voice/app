@@ -8,7 +8,7 @@ import { colors, spacing } from "../theme"
 // import { useNavigation } from "@react-navigation/native"
 import { useStores } from "../models"
 
-export const CreateIdentityScreen: FC<StackScreenProps<AppStackScreenProps, "CreateIdentity">> = observer(function CreateIdentityScreen() {
+export const CreateIdentityScreen: FC<StackScreenProps<AppStackScreenProps<"CreateIdentity">>> = observer(function CreateIdentityScreen() {
   // Pull in one of our MST stores
   const { chatStore: {newContact:{name, setName}}, identity: {newIdentity} } = useStores()
 
