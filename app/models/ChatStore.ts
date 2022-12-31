@@ -89,6 +89,13 @@ export const ChatStoreModel = types
       });
 
     })
+    const loadEarlierMessages = flow(function* loadEarlierMessages(){
+      const messages: Message[] = yield api.beeCore.messages.list(self.selected._id, self.messages.size, self.messages.size + 20)
+      // console.log(messages)
+      messages.forEach(msg => {
+        self.messages.put(msg)
+      });
+    })
     const send = flow(function* send(msg: Message) {
       let rmsg: Message = yield api.beeCore.chat.send(self.selected._id, {
         _id: msg._id,
@@ -151,6 +158,7 @@ export const ChatStoreModel = types
       yield loadContact()
     })
     return {
+      loadEarlierMessages,
       openPMChat,
       selectChat,
       loadChatList,
