@@ -3,7 +3,7 @@ import { FlatList, View } from 'react-native';
 import { observer } from "mobx-react-lite"
 import { ViewStyle } from "react-native"
 import { StackScreenProps } from "@react-navigation/stack"
-import { AppStackScreenProps, ChatScreenProps } from "../navigators"
+import { ChatScreenProps } from "../navigators"
 import { Screen } from "../components"
 import { useNavigation } from "@react-navigation/native"
 import { useStores } from "../models"
@@ -15,6 +15,9 @@ import { List } from 'react-native-paper';
 export const ChatListScreen: FC<StackScreenProps<ChatScreenProps<"ChatList">>> = observer(function ChatListScreen() {
   // Pull in one of our MST stores
   const { chatStore } = useStores()
+  // Pull in navigation via hook
+  const navigation = useNavigation()
+  
   const navigateItem = (id) => {
     return () => {
       chatStore.clear()
@@ -27,8 +30,6 @@ export const ChatListScreen: FC<StackScreenProps<ChatScreenProps<"ChatList">>> =
     navigation.navigate("NewChat")
   }
 
-  // Pull in navigation via hook
-  const navigation = useNavigation()
 
   const renderItem = ({ item }) => (
     <List.Item
@@ -52,7 +53,7 @@ export const ChatListScreen: FC<StackScreenProps<ChatScreenProps<"ChatList">>> =
       </Screen>
       <View style={$fixedView}>
         <FAB
-          icon="plus"
+          icon="pencil"
           style={$fab}
           onPress={newChat}
         />

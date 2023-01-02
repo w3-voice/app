@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">HelloWorld</string>
-    <string name="local_service_stopped">Hellp</string>
-    <string name="local_service_label">Hello</string>
-    <string name="local_service_started">HelloNot</string>
+    <string name="local_service_stopped">HelloWorld Stopped</string>
+    <string name="local_service_label">HelloWorld</string>
+    <string name="local_service_started">HelloWorld Started</string>
+    <string name="default_tile_label">IPCH</string>
 </resources>

@@ -17,22 +17,16 @@ export const NewContactScreen: FC<StackScreenProps<ChatScreenProps<"NewContact">
       contentContainerStyle={$screenContentContainer}
       safeAreaEdges={["top", "bottom"]}
     >
-      <Text tx="createIdentity.title" />
-      <Text tx="createIdentity.message" />
+      <Text tx="createContact.message" />
 
       <TextField
         value={name}
         onChangeText={setName}
         containerStyle={$textField}
         autoCapitalize="none"
-        autoComplete="email"
-        autoCorrect={false}
         keyboardType="email-address"
-        labelTx="createIdentity.instruction"
-        placeholderTx="createIdentity.instruction"
-      // helper={errors?.authEmail}
-      // status={errors?.authEmail ? "error" : undefined}
-      // onSubmitEditing={() => authPasswordInput.current?.focus()}
+        labelTx="createContact.name.label"
+        placeholderTx="createContact.name.placeholder"
       />
 
 
@@ -41,19 +35,24 @@ export const NewContactScreen: FC<StackScreenProps<ChatScreenProps<"NewContact">
         onChangeText={setId}
         containerStyle={$textField}
         autoCapitalize="none"
-        autoComplete="email"
         autoCorrect={false}
-        keyboardType="email-address"
-        labelTx="createIdentity.instruction"
-        placeholderTx="createIdentity.instruction"
-      // helper={errors?.authEmail}
-      // status={errors?.authEmail ? "error" : undefined}
-      // onSubmitEditing={() => authPasswordInput.current?.focus()}
+        labelTx="createContact.name.label"
+        placeholderTx="createContact.name.placeholder"
       />
 
+
       <Button
-        testID="login-button"
-        tx="createIdentity.instruction"
+        testID="scan-button"
+        tx="createContact.btScan"
+        style={$tapButton}
+        preset="reversed"
+        onPress={() => {
+            navigation.navigate("ScanNewContact")
+        }}
+      />
+      <Button
+        testID="save-button"
+        tx="createContact.btSave"
         style={$tapButton}
         preset="reversed"
         onPress={() => {
