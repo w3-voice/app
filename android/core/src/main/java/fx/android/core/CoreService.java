@@ -1,16 +1,18 @@
 package fx.android.core;
 
+import static android.app.PendingIntent.FLAG_ONE_SHOT;
+
+import android.app.AlarmManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
-import android.os.Message;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -18,24 +20,19 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 
 import bridge.Bridge;
 import bridge.Bridge_;
-import bridge.Emitter;
 import bridge.HostConfig;
 import bridge.Notification;
 
-import org.json.*;
-
 public class CoreService extends Service {
-    private static CoreService instance = null;
     private static final String TAG = "CoreService";
     private final String NAME = "CoreService";
     private final String CHANNEL_ID = "111";
     private final String VERSION = "0.0.3";
     private boolean inited = false;
+    private boolean initing = false;
     int notificationId = 12;
     private Bridge_ core = null;
     String appDir;
@@ -43,13 +40,10 @@ public class CoreService extends Service {
     String path;
     final CoreEmitter emitter = new CoreEmitter();
 
-    public static boolean isServiceCreated() {
-        return instance != null;
-    }
 
     public boolean healthCheck() {
         try {
-            if (instance != null && core != null) {
+            if (core != null) {
                 core.isLogin();
                 return true;
             }
@@ -62,9 +56,10 @@ public class CoreService extends Service {
     private final ILocalListener mlistener = event -> {
         try {
             Log.i(TAG, ": notification called");
-            switch (event.action){
-                case "received": showMessageNotification(event.payload);
-                break;
+            switch (event.action) {
+                case "received":
+                    showMessageNotification(event.payload);
+                    break;
                 // Todo: I still don't know what to do with action.
             }
 
@@ -80,21 +75,38 @@ public class CoreService extends Service {
 
 
     private void init() {
-        while(!healthCheck()){
+        initing = true;
+        try {
             createHost();
-
+            core.isLogin();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         emitter.setLocalListener(mlistener);
-        createNotificationChannel();
-        inited = false;
+        initing = false;
+        inited = true;
     }
 
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         Log.i("IsolatedService", "Task removed in " + this + ": " + rootIntent);
+        Intent restartServiceIntent = new Intent(getApplicationContext(), this.getClass());
+        restartServiceIntent.setPackage(getPackageName());
+
+        PendingIntent restartServicePendingIntent = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            restartServicePendingIntent = PendingIntent.getService(getApplicationContext(), 1, restartServiceIntent, PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            restartServicePendingIntent = PendingIntent.getService(getApplicationContext(), 1, restartServiceIntent, FLAG_ONE_SHOT);
+        }
+        AlarmManager alarmService = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+        alarmService.set(
+                AlarmManager.ELAPSED_REALTIME,
+                SystemClock.elapsedRealtime() + 1000,
+                restartServicePendingIntent);
         core.stop();
-        stopSelf();
+        super.onTaskRemoved(rootIntent);
     }
 
     private void createNotificationChannel() {
@@ -114,7 +126,7 @@ public class CoreService extends Service {
     }
 
 
-    private synchronized void createHost() {
+    private synchronized void createHost() throws Exception {
         Context context = getApplicationContext();
         appDir = context.getFilesDir().toString();
         storeDirPath = appDir + "/bee/received/";
@@ -129,23 +141,19 @@ public class CoreService extends Service {
         } else {
             Log.d(NAME, "store exist");
         }
-        try {
-            Log.i(NAME, "core service stared");
-            HostConfig hostConfig = Bridge.newHostConfig();
-            // set net driver
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                NetDriver inet = new NetDriver();
-                hostConfig.setNetDriver(inet);
-            }
-            hostConfig.setBroadCaster(emitter);
-            this.core = Bridge.newBridge(path, hostConfig);
-            String s1 = this.core.getInterfaces();
-            Log.d(NAME, "driver" + s1);
-        } catch (Exception e) {
-            this.core = null;
-            Log.e(NAME, "failed to start core service", e);
-            e.printStackTrace();
+
+        Log.i(NAME, "core service stared");
+        HostConfig hostConfig = Bridge.newHostConfig();
+        // set net driver
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            NetDriver inet = new NetDriver();
+            hostConfig.setNetDriver(inet);
         }
+        hostConfig.setBroadCaster(emitter);
+        this.core = Bridge.newBridge(path, hostConfig);
+        String s1 = this.core.getInterfaces();
+        Log.d(NAME, "driver" + s1);
+
     }
 
     public void showMessageNotification(String msgID) throws Exception {
@@ -171,28 +179,29 @@ public class CoreService extends Service {
                 .setSmallIcon(R.drawable.ic_stat_onesignal_default)
                 .setContentTitle("HoodChat")
                 .setContentText("background service")
+                .setSilent(true)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);
         PendingIntent p = makeIntent();
         if (p != null) {
             builder.setContentIntent(p);
         }
-        startForeground(1, builder.build());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForeground(1, builder.build());
+        }
     }
 
     @Override
     public void onCreate() {
-        if (!inited && instance == null) {
-            super.onCreate();
-            instance = this;
+        createNotificationChannel();
+        showServiceNotification();
+        super.onCreate();
+        if (!inited && !initing) {
             init();
         }
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (!inited) {
-            init();
-        }
         showServiceNotification();
         return START_STICKY;
     }
@@ -201,7 +210,6 @@ public class CoreService extends Service {
     public void onDestroy() {
         Log.i(NAME, "core service destroyed");
         core.stop();
-        instance = null;
         Toast.makeText(this, R.string.local_service_stopped, Toast.LENGTH_SHORT).show();
     }
 
@@ -212,24 +220,22 @@ public class CoreService extends Service {
     }
 
 
-
     // Core API service for isolated service
     private final ICoreService.Stub binder = new ICoreService.Stub() {
 
-        private boolean handleCoreException(boolean type, Exception e, String msg){
+        // TODO: we have to introduce a return type which we can post error to client
+        private boolean handleCoreException(boolean type, Exception e, String msg) {
             Log.e("CoreService", msg, e);
-            if (!healthCheck()){
-                init();
-            }
-            return  type;
+//            if (!healthCheck()){
+//                init();
+//            }
+            return type;
         }
-
-
-        private String handleCoreException(String type, Exception e, String msg){
+        private String handleCoreException(String type, Exception e, String msg) {
             Log.e("CoreService", msg, e);
-            if (!healthCheck()){
-                init();
-            }
+//            if (!healthCheck()){
+//                init();
+//            }
             return type;
         }
 
@@ -246,7 +252,7 @@ public class CoreService extends Service {
                 core.addContact(id, name);
                 return true;
             } catch (Exception e) {
-                return handleCoreException(false, e,"can not add contact");
+                return handleCoreException(false, e, "can not add contact");
             }
         }
 
@@ -254,7 +260,7 @@ public class CoreService extends Service {
             try {
                 return core.getChat(id);
             } catch (Exception e) {
-                return handleCoreException(null, e,"failed to retrieve chat");
+                return handleCoreException(null, e, "failed to retrieve chat");
             }
         }
 
@@ -262,7 +268,7 @@ public class CoreService extends Service {
             try {
                 return core.getChats(skip, limit);
             } catch (Exception e) {
-                return handleCoreException(null, e,"failed to retrieve chat");
+                return handleCoreException(null, e, "failed to retrieve chat");
             }
         }
 
@@ -270,7 +276,7 @@ public class CoreService extends Service {
             try {
                 return core.getContact(id);
             } catch (Exception e) {
-                return handleCoreException(null, e,"failed to retrieve contact");
+                return handleCoreException(null, e, "failed to retrieve contact");
             }
         }
 
@@ -278,7 +284,7 @@ public class CoreService extends Service {
             try {
                 return core.getContacts(skip, limit);
             } catch (Exception e) {
-                return handleCoreException(null, e,"failed to retrieve contact list");
+                return handleCoreException(null, e, "failed to retrieve contact list");
             }
         }
 
@@ -286,7 +292,7 @@ public class CoreService extends Service {
             try {
                 return core.getIdentity();
             } catch (Exception e) {
-                return handleCoreException(null, e,"failed to retrieve identity");
+                return handleCoreException(null, e, "failed to retrieve identity");
             }
         }
 
@@ -294,7 +300,7 @@ public class CoreService extends Service {
             try {
                 return core.newIdentity(name);
             } catch (Exception e) {
-                return handleCoreException(null, e,"failed to retrieve create identity");
+                return handleCoreException(null, e, "failed to retrieve create identity");
             }
         }
 
@@ -302,7 +308,7 @@ public class CoreService extends Service {
             try {
                 return core.getMessages(chatID, skip, limit);
             } catch (Exception e) {
-                return handleCoreException(null, e,"failed to retrieve message list");
+                return handleCoreException(null, e, "failed to retrieve message list");
             }
         }
 
@@ -311,7 +317,7 @@ public class CoreService extends Service {
                 return core.getMessage(id);
             } catch (Exception e) {
                 Log.e(NAME, "can not retrieve messages", e);
-                return handleCoreException(null, e,"failed to retrieve message");
+                return handleCoreException(null, e, "failed to retrieve message");
             }
         }
 
@@ -319,7 +325,7 @@ public class CoreService extends Service {
             try {
                 return core.isLogin();
             } catch (Exception e) {
-                return handleCoreException(false, e,"failed to check login");
+                return handleCoreException(false, e, "failed to check login");
             }
         }
 
@@ -327,7 +333,7 @@ public class CoreService extends Service {
             try {
                 return core.newPMChat(contactID);
             } catch (Exception e) {
-                return handleCoreException(null, e,"failed to create new private chat");
+                return handleCoreException(null, e, "failed to create new private chat");
             }
         }
 
@@ -335,7 +341,7 @@ public class CoreService extends Service {
             try {
                 return core.getPMChat(contactID);
             } catch (Exception e) {
-                return handleCoreException(null, e,"failed to retrieve private chat");
+                return handleCoreException(null, e, "failed to retrieve private chat");
             }
         }
 
@@ -344,7 +350,7 @@ public class CoreService extends Service {
             try {
                 return core.sendMessage(chatID, text);
             } catch (Exception e) {
-                return handleCoreException(null, e,"failed to send private message");
+                return handleCoreException(null, e, "failed to send private message");
             }
         }
     };

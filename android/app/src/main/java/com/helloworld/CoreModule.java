@@ -67,12 +67,13 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
         }
     }
 
+    //Not working as is should
     private boolean recoverService(int retry) {
         while (retry>0) {
             if (bindRequest()) {
                 Log.d(TAG, "service recovered");
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -115,17 +116,28 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
 
     @ReactMethod
     public void startBind(Callback cb) {
+        if (cBound) {
+            callBack.invoke(true);
+            return;
+        }
+        if (callBack != null) {
+            return;
+        }
+
         mHandler = new InternalHandler(this);
-        bindRequest();
+        boolean res = bindRequest();
         callBack = cb;
-        timeoutHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if(!cBound){
-                    recoverService(5);
-                }
-            }
-        }, 500);
+        if(!res){
+            startService();
+        }
+//        timeoutHandler.postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                if(!cBound){
+//                    recoverService(5);
+//                }
+//            }
+//        }, 500);
 
     }
 
