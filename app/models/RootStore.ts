@@ -1,20 +1,22 @@
-import { Instance, SnapshotOut, types } from "mobx-state-tree"
-import { ChatStoreModel } from "./ChatStore"
-import { IdentityModel } from "./Identity"
+import { flow, Instance, SnapshotOut, types } from "mobx-state-tree"
+import { createContactStoreDefaultModel } from "./ContactStore"
+import { createChatListDefaultModel } from "./ChatStore"
+import { createIdentityDefaultModel } from "./Identity"
 
 /**
  * A RootStore model.
  */
 export const RootStoreModel = types.model("RootStore").props({
-  identity: types.optional(IdentityModel, {user:null ,isLoggedIn:false}),
-  chatStore: types.optional(ChatStoreModel, {newContact:{name:"", _id:""}})
+  contactStore: createContactStoreDefaultModel(),
+  identityStore: createIdentityDefaultModel(),
+  chatStore: createChatListDefaultModel()
 })
 
 /**
  * The RootStore instance.
  */
-export interface RootStore extends Instance<typeof RootStoreModel> {}
+export interface RootStore extends Instance<typeof RootStoreModel> { }
 /**
  * The data of a RootStore.
  */
-export interface RootStoreSnapshot extends SnapshotOut<typeof RootStoreModel> {}
+export interface RootStoreSnapshot extends SnapshotOut<typeof RootStoreModel> { }

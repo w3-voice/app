@@ -32,8 +32,12 @@ export async function setupRootStore(rootStore: RootStore) {
     // load the last known state from AsyncStorage
     // restoredState = ({} || {})
     // applySnapshot(rootStore, restoredState)
+    
+    applySnapshot(rootStore.contactStore,{list:[], form:{name:"",_id:"",err:null,saving:false, done:false}})
     if (!_subscribed){
       await api.beeCore.bindService()
+      await rootStore.identityStore.loadIdentity()
+      await rootStore.chatStore.loadChatList()
       coreSync(rootStore.chatStore)
       _subscribed = true;
     }
