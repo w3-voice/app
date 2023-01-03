@@ -1,4 +1,4 @@
-import React, { FC } from "react"
+import React, { FC, useEffect } from "react"
 import { observer } from "mobx-react-lite"
 import { FlatList, View, ViewStyle } from "react-native"
 import { StackScreenProps } from "@react-navigation/stack"
@@ -13,15 +13,27 @@ import { List } from 'react-native-paper';
 
 export const NewChatScreen: FC<StackScreenProps<ChatScreenProps<"NewChat">>> = observer(function NewChatScreen() {
  // Pull in one of our MST stores
- const { chatStore: {contacts, openPMChat} } = useStores()
- 
+ const { chatStore: { openPMChat}, contactStore:{list, load, form: {done, _id}} } = useStores()
+ useEffect(()=>{
+  load()
+ },[])
+ useEffect(()=>{
+  if(done){
+    console.log("done caled")
+    openPMChat(_id).then(()=>{
+      navigation.navigate("Chat")
+    }).catch((e)=>{
+      console.log("open failed")
+    })
+  }
+ },[done])
  const navigation = useNavigation()
  const navigateItem = (id) => {
   return () => {
     openPMChat(id).then(()=>{
       navigation.navigate("Chat")
     }).catch((e)=>{
-      console.log("open failed",e)
+      console.log("open failed")
     })
   }
 }
@@ -44,7 +56,7 @@ const renderItem = ({ item }) => (
        contentContainerStyle={$screenContentContainer}
      >
        <FlatList
-         data={contacts}
+         data={list}
          renderItem={renderItem}
          keyExtractor={item => item._id}
        />
