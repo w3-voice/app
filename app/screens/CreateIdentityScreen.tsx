@@ -1,22 +1,36 @@
-import React, { FC } from "react"
+import React, { FC, useState } from "react"
 import { observer } from "mobx-react-lite"
-import { ViewStyle, TextStyle } from "react-native"
+import { ViewStyle, TextStyle, Keyboard } from "react-native"
 import { StackScreenProps } from "@react-navigation/stack"
 import { AppStackScreenProps } from "../navigators"
-import { Screen, Text, TextField, Button } from "../components"
+import { Screen, Text, TextField, } from "../components"
 import { colors, spacing } from "../theme"
-// import { useNavigation } from "@react-navigation/native"
+import { useNavigation } from "@react-navigation/native"
 import { useStores } from "../models"
+import { Button, TextInput } from "react-native-paper"
 
 export const CreateIdentityScreen: FC<StackScreenProps<AppStackScreenProps<"CreateIdentity">>> = observer(function CreateIdentityScreen() {
   // Pull in one of our MST stores
-  const { chatStore: {newContact:{name, setName}}, identity: {newIdentity} } = useStores()
+  const { identityStore: {newIdentity, name, setName} } = useStores()
+  const [creating, setCreating] = useState(false)
 
   // Pull in navigation via hook
-  // const navigation = useNavigation()
+  const navigation = useNavigation()
   const handleNewIdentity = () => {
-    newIdentity(name)
-    setName("")
+    if(!creating){
+      setCreating(true);
+      Keyboard.dismiss()
+      newIdentity(name).then(()=>{
+        setCreating(false)
+        navigation.navigate("ChatList")
+      })
+    }
+  }
+
+  const onTextChange = (s: string)=>{
+    if(!creating){
+      setName(s)
+    }
   }
 
   return (
@@ -25,24 +39,28 @@ export const CreateIdentityScreen: FC<StackScreenProps<AppStackScreenProps<"Crea
       contentContainerStyle={$screenContentContainer}
       safeAreaEdges={["top", "bottom"]}
     >
-      <Text tx="createIdentity.title" />
       <Text tx="createIdentity.message" />
 
-      <TextField
+      <TextInput
         value={name}
-        onChangeText={setName}
-        containerStyle={$textField}
+        onChangeText={onTextChange}
+        editable={!creating}
         autoCapitalize="none"
         autoCorrect={false}
+        label="Please pick a name"
+        style={$textField}
+        // helper="Field can not be empty"
       />
 
       <Button
-        testID="login-button"
-        tx="createIdentity.instruction"
-        style={$tapButton}
-        preset="reversed"
+        mode="contained"
+        loading={creating}
+        disabled={name.length<1}
         onPress={handleNewIdentity}
-      />
+      >
+        Join
+      </Button>
+      {creating &&<Text text="It may take a minute" />}
     </Screen>
   )
 })
@@ -54,6 +72,9 @@ const $root: ViewStyle = {
 const $screenContentContainer: ViewStyle = {
   paddingVertical: spacing.huge,
   paddingHorizontal: spacing.large,
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'space-between',
 }
 
 const $signIn: TextStyle = {
@@ -74,5 +95,6 @@ const $textField: ViewStyle = {
 }
 
 const $tapButton: ViewStyle = {
+  // display: 'none',
   marginTop: spacing.extraSmall,
 }
