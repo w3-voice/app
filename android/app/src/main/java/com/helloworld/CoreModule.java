@@ -293,7 +293,6 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
                 try {
                     String res = cService.getPMChat(contactID);
                     if (res != null) {
-                        res = cService.newPMChat(contactID);
                         promise.resolve(res);
                         return;
                     }
