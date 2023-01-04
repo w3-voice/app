@@ -205,6 +205,28 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
     }
 
     @ReactMethod
+    public void getContact(String id, Promise promise) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String res = cService.getContact(id);
+                    Log.d(CoreModule.NAME, "chat is ready");
+                    if (res == null) {
+                        promise.reject(new Error("fail to fetch cotact"));
+                        Log.d(CoreModule.NAME, "fail to fetch cotact");
+                    } else {
+                        promise.resolve(res);
+                    }
+                } catch (RemoteException e) {
+                    promise.reject(e);
+                }
+            }
+        }).start();
+    }
+
+
+    @ReactMethod
     public void getChat(String id, Promise promise) {
         new Thread(new Runnable() {
             @Override
@@ -263,6 +285,30 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
         }).start();
     }
 
+    @ReactMethod
+    public void openPMChat(String contactID, Promise promise) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String res = cService.getPMChat(contactID);
+                    if (res != null) {
+                        res = cService.newPMChat(contactID);
+                        promise.resolve(res);
+                        return;
+                    }
+                    res = cService.newPMChat(contactID);
+                    if (res != null) {
+                        promise.resolve(res);
+                        return;
+                    }
+                    promise.reject(new Error("failed to open private chat"));
+                } catch (Exception e) {
+                    promise.reject(e);
+                }
+            }
+        }).start();
+    }
     @ReactMethod
     public void getMessages(String chatID, int skip, int limit, Promise promise) {
         new Thread(new Runnable() {
