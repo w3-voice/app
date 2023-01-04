@@ -13,15 +13,16 @@ import { List } from 'react-native-paper';
 
 export const NewChatScreen: FC<StackScreenProps<ChatScreenProps<"NewChat">>> = observer(function NewChatScreen() {
  // Pull in one of our MST stores
- const { chatStore: { openPMChat}, contactStore:{list, load, form: {done, _id}} } = useStores()
+ const { chatStore: { openPMChat}, contactStore:{list, load, form: {done, _id, reset}} } = useStores()
  useEffect(()=>{
   load()
  },[])
  useEffect(()=>{
-  if(done){
+  if(!!done){
     console.log("done caled")
     openPMChat(_id).then(()=>{
       navigation.navigate("Chat")
+      reset()
     }).catch((e)=>{
       console.log("open failed")
     })

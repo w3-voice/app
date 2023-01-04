@@ -18,7 +18,7 @@ export const NewContactScreenHeaderRight = (_props: HeaderButtonProps) => {
 }
 
 const NewContactScreenHeaderRightOB:FC<HeaderButtonProps> = observer(function NewContactScreen(_props: HeaderButtonProps) {
-  const { contactStore: {form: {valid, saving, err, name}, add}, chatStore:{createPMChat} } = useStores()
+  const { contactStore: {form: {valid, saving, err, name}, add} } = useStores()
   const navigation = useNavigation()
   const onPressDone = () => {
     add().then(() => {

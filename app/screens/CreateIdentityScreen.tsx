@@ -11,7 +11,7 @@ import { Button, TextInput } from "react-native-paper"
 
 export const CreateIdentityScreen: FC<StackScreenProps<AppStackScreenProps<"CreateIdentity">>> = observer(function CreateIdentityScreen() {
   // Pull in one of our MST stores
-  const { identityStore: {newIdentity, name, setName} } = useStores()
+  const { identityStore: {newIdentity, form, setForm} } = useStores()
   const [creating, setCreating] = useState(false)
 
   // Pull in navigation via hook
@@ -20,7 +20,7 @@ export const CreateIdentityScreen: FC<StackScreenProps<AppStackScreenProps<"Crea
     if(!creating){
       setCreating(true);
       Keyboard.dismiss()
-      newIdentity(name).then(()=>{
+      newIdentity(form).then(()=>{
         setCreating(false)
         navigation.navigate("ChatList")
       })
@@ -29,7 +29,7 @@ export const CreateIdentityScreen: FC<StackScreenProps<AppStackScreenProps<"Crea
 
   const onTextChange = (s: string)=>{
     if(!creating){
-      setName(s)
+      setForm(s)
     }
   }
 
@@ -42,7 +42,7 @@ export const CreateIdentityScreen: FC<StackScreenProps<AppStackScreenProps<"Crea
       <Text tx="createIdentity.message" />
 
       <TextInput
-        value={name}
+        value={form}
         onChangeText={onTextChange}
         editable={!creating}
         autoCapitalize="none"
@@ -55,7 +55,7 @@ export const CreateIdentityScreen: FC<StackScreenProps<AppStackScreenProps<"Crea
       <Button
         mode="contained"
         loading={creating}
-        disabled={name.length<1}
+        disabled={form.length<1}
         onPress={handleNewIdentity}
       >
         Join

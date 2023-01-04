@@ -1,4 +1,4 @@
-import React, { FC } from "react"
+import React, { FC, useEffect } from "react"
 import { FlatList, Platform, View } from 'react-native';
 import { observer } from "mobx-react-lite"
 import { ViewStyle } from "react-native"
@@ -23,8 +23,7 @@ export const ChatListHeaderMenu = (_props: HeaderButtonProps) => {
   const {identityStore} = useStores()
 
   const copyID = () => {
-    // console.log("copy identity",identityStore.user()._id)
-    Clipboard.setString(identityStore.user()._id)
+    Clipboard.setString(identityStore.user._id)
     navigation.navigate("QRCodeModal")
     closeMenu()
   }
@@ -40,7 +39,6 @@ export const ChatListHeaderMenu = (_props: HeaderButtonProps) => {
         <Appbar.Action icon={MORE_ICON} color="black" onPress={openMenu} />
       }>
       <Menu.Item onPress={copyID} title="ID" />
-      <Menu.Item onPress={newContact} title="New Contact" />
     </Menu>
   )
 }
@@ -53,7 +51,6 @@ export const ChatListScreen: FC<StackScreenProps<ChatScreenProps<"ChatList">>> =
 
   const navigateItem = (id) => {
     return () => {
-      chatStore.clear()
       chatStore.selectChat(id)
       navigation.navigate("Chat")
     }
@@ -78,7 +75,7 @@ export const ChatListScreen: FC<StackScreenProps<ChatScreenProps<"ChatList">>> =
         contentContainerStyle={$screenContentContainer}
       >
         <FlatList
-          data={chatStore.chats.slice()}
+          data={[...chatStore.chatList]}
           renderItem={renderItem}
           keyExtractor={item => item._id}
         />
