@@ -16,7 +16,7 @@ export const NewContactModel = types
   })
   .views((self) => ({
     get valid(){
-      let res = true
+      let res = !!self._id && !!self.name
       res = res && self._id.length > 0
       res = res && self.name.length > 0
       return res
