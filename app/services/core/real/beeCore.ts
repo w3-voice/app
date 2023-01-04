@@ -26,27 +26,34 @@ class ChatAPI implements IChat {
 
 class PrivateChatAPI implements IPrivateChat {
 
-    async add(con: Contact): Promise<Chat> {
-        const res = await CoreModule.newPMChat(con._id)
+    async add(contactID: ID): Promise<Chat> {
+        const res = await CoreModule.newPMChat(contactID)
         const newChat: Chat = base64ToObject(res)
         return newChat
     }
-    async get(con: Contact): Promise<Chat> {
-        const res = await CoreModule.getPMChat(con._id)
+    async get(contactID: ID): Promise<Chat> {
+        const res = await CoreModule.getPMChat(contactID)
         const newChat: Chat = base64ToObject(res)
         return newChat
+    }
+    async open(contactID: ID): Promise<Chat> {
+        const res = await CoreModule.openPMChat(contactID)
+        const chat: Chat = base64ToObject(res)
+        return chat
     }
 
 }
 
 class ContactAPI implements IContact {
 
-    get(id: string) {
-        throw new Error("Method not implemented.");
+    async get(id: ID): Promise<Contact> {
+        const res = await CoreModule.getContact(id.toString())
+        const chat: Contact = base64ToObject(res)
+        return chat
     }
-    async add(con: Contact) {
+    async add(con: Contact): Promise<boolean> {
         const res = await CoreModule.addContact(con._id, con.name)
-        return
+        return res
     }
     async list(skip: number, limit: number): Promise<Contact[]> {
         const res = await CoreModule.getContacts(skip, limit)
