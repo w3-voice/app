@@ -29,11 +29,10 @@ export async function setupRootStore(rootStore: RootStore) {
   let restoredState: any
 
   try {
-    // load the last known state from AsyncStorage
-    // restoredState = ({} || {})
-    // applySnapshot(rootStore, restoredState)
     if (!_subscribed){
-      await api.beeCore.bindService()
+      const bonded = await api.beeCore.bindService()
+      await rootStore.identityStore.loadIdentity()
+      await rootStore.chatStore.loadChatList()
       coreSync(rootStore.chatStore)
       _subscribed = true;
     }

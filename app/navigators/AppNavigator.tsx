@@ -58,7 +58,7 @@ const Stack = createNativeStackNavigator<AppStackParamList>()
 
 const AppStack = observer(function AppStack() {
   const {
-    identity: { isLoggedIn },
+    identityStore: { isLoggedIn },
   } = useStores()
   return (
     <Stack.Navigator

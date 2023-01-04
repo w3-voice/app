@@ -247,15 +247,6 @@ public class CoreService extends Service {
             if (cb != null) emitter.removeListener(cb);
         }
 
-        public boolean addContact(String id, String name) throws RemoteException {
-            try {
-                core.addContact(id, name);
-                return true;
-            } catch (Exception e) {
-                return handleCoreException(false, e, "can not add contact");
-            }
-        }
-
         public String getChat(String id) throws RemoteException {
             try {
                 return core.getChat(id);
@@ -269,6 +260,15 @@ public class CoreService extends Service {
                 return core.getChats(skip, limit);
             } catch (Exception e) {
                 return handleCoreException(null, e, "failed to retrieve chat");
+            }
+        }
+
+        public boolean addContact(String id, String name) throws RemoteException {
+            try {
+                core.addContact(id, name);
+                return true;
+            } catch (Exception e) {
+                return handleCoreException(false, e, "can not add contact");
             }
         }
 

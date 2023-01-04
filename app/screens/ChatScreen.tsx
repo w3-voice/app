@@ -1,4 +1,4 @@
-import React, { FC } from "react"
+import React, { FC, useEffect } from "react"
 import { observer } from "mobx-react-lite"
 import { StackScreenProps } from "@react-navigation/stack"
 import { ChatScreenProps } from "../navigators"
@@ -8,8 +8,10 @@ import { useStores } from "../models"
 
 export const ChatScreen: FC<StackScreenProps<ChatScreenProps<"ChatList">>> = observer(function ChatScreen() {
   // Pull in one of our MST stores
-  const { chatStore: {sortedMessages, send, loadEarlierMessages} , identity } = useStores()
-
+  const { chatStore: {sortedMessages, send, loadMessages, hasEarlierMessages} , identityStore } = useStores()
+  useEffect(()=>{
+    loadMessages()
+  },[])
   return (
     <GiftedChat
       messages={
@@ -18,9 +20,9 @@ export const ChatScreen: FC<StackScreenProps<ChatScreenProps<"ChatList">>> = obs
       onSend={messages => {
         messages.map(msg=>send(msg))
       }}
-      user={identity.user}
-      loadEarlier={true}
-      onLoadEarlier={loadEarlierMessages}
+      user={identityStore.user}
+      loadEarlier={hasEarlierMessages}
+      onLoadEarlier={loadMessages}
       infiniteScroll={true}
     />
   )

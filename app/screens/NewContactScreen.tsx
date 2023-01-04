@@ -1,15 +1,43 @@
-import React, { FC } from "react"
-import { observer } from "mobx-react-lite"
+import React, { FC, useEffect } from "react"
+import { Observer, observer } from "mobx-react-lite"
 import { TextStyle, ViewStyle } from "react-native"
 import { StackScreenProps } from "@react-navigation/stack"
-import { AppStackScreenProps, ChatScreenProps } from "../navigators"
-import { Screen, Text, TextField, Button } from "../components"
+import { ChatScreenProps } from "../navigators"
+import { Screen, Text } from "../components"
 import { useNavigation } from "@react-navigation/native"
 import { useStores } from "../models"
 import { colors, spacing } from "../theme"
+import { Appbar, Button, TextInput } from "react-native-paper"
+import { HeaderButtonProps } from "@react-navigation/native-stack/lib/typescript/src/types"
+import { ErrorBanner } from "../components/ErrorBanner"
+
+export const NewContactScreenHeaderRight = (_props: HeaderButtonProps) => {
+  return (
+    <NewContactScreenHeaderRightOB canGoBack={true}></NewContactScreenHeaderRightOB>
+  )
+}
+
+const NewContactScreenHeaderRightOB:FC<HeaderButtonProps> = observer(function NewContactScreen(_props: HeaderButtonProps) {
+  const { contactStore: {form: {valid, saving, err, name}, add} } = useStores()
+  const navigation = useNavigation()
+  const onPressDone = () => {
+    add().then(() => {
+      navigation.goBack()
+    })
+  }
+  const onPressQRCScan = () => {
+    navigation.navigate("ScanNewContact")
+  }
+  return (
+    <>
+      <Appbar.Action icon="qrcode-scan" onPress={onPressQRCScan}  />
+      <Appbar.Action icon="check" onPress={onPressDone} disabled={!valid}/>
+    </>
+  )
+})
 
 export const NewContactScreen: FC<StackScreenProps<ChatScreenProps<"NewContact">>> = observer(function NewContactScreen() {
-  const { chatStore: { newContact: { setName, setId, name, _id, clear }, addContactAndCreateChat}, } = useStores()
+  const { contactStore: {form:{name, setName, _id, setId, err, reset}} } = useStores()
   const navigation = useNavigation()
   return (
     <Screen
@@ -17,50 +45,21 @@ export const NewContactScreen: FC<StackScreenProps<ChatScreenProps<"NewContact">
       contentContainerStyle={$screenContentContainer}
       safeAreaEdges={["top", "bottom"]}
     >
-      <Text tx="createContact.message" />
-
-      <TextField
+      <ErrorBanner message={err} visible={!!err} done={reset}></ErrorBanner>
+      <TextInput
         value={name}
         onChangeText={setName}
-        containerStyle={$textField}
+        style={$textField}
         autoCapitalize="none"
-        keyboardType="email-address"
-        labelTx="createContact.name.label"
-        placeholderTx="createContact.name.placeholder"
+        label="Contact Name"
       />
-
-
-      <TextField
+      <TextInput
         value={_id}
         onChangeText={setId}
-        containerStyle={$textField}
+        style={$textField}
         autoCapitalize="none"
         autoCorrect={false}
-        labelTx="createContact.name.label"
-        placeholderTx="createContact.name.placeholder"
-      />
-
-
-      <Button
-        testID="scan-button"
-        tx="createContact.btScan"
-        style={$tapButton}
-        preset="reversed"
-        onPress={() => {
-            navigation.navigate("ScanNewContact")
-        }}
-      />
-      <Button
-        testID="save-button"
-        tx="createContact.btSave"
-        style={$tapButton}
-        preset="reversed"
-        onPress={() => {
-          addContactAndCreateChat().then(()=>{
-            clear()
-            navigation.navigate("Chat")
-          }) 
-        }}
+        label="Contact ID"
       />
     </Screen>
   )

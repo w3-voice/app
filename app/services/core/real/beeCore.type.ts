@@ -16,8 +16,9 @@ export interface IChat {
 }
 
 export interface IPrivateChat {
-  add(con: Contact): Promise<Chat>
-  get(con: Contact): Promise<Chat>
+  add(con: ID): Promise<Chat>
+  get(conId: ID): Promise<Chat>
+  open(contactID: ID): Promise<Chat>
 }
 
 export interface IMessages {
@@ -26,8 +27,8 @@ export interface IMessages {
 }
 
 export interface IContact {
-  get(id: ID)
-  add(con: Contact)
+  get(id: ID): Promise<Contact>
+  add(con: Contact): Promise<boolean>
   list(skip: number, limit: number): Promise<Contact[]>
 }
 

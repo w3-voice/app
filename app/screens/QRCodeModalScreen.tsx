@@ -11,7 +11,7 @@ import { useNavigation } from "@react-navigation/native"
 
 export const QRCodeModalScreen: FC<StackScreenProps<ChatScreenProps<"QRCodeModal">>> = observer(function QRCodeModalScreen() {
     // Pull in one of our MST stores
-    const { identity } = useStores()
+    const { identityStore: {user: {_id, name}} } = useStores()
     const [visibility, setVisibility] = useState(true)
     const navigation = useNavigation()
     const dismiss = ()=>{
@@ -23,7 +23,7 @@ export const QRCodeModalScreen: FC<StackScreenProps<ChatScreenProps<"QRCodeModal
             <Modal visible={visibility} onDismiss={dismiss} contentContainerStyle={$containerStyle}>
                 
                 <QRCode
-                    value={`/p2p/${identity.user._id}/@${identity.user.name}`}
+                    value={`/p2p/${_id}/@${name}`}
                     size={250}
                 />
                 <Text style={$textStyle}>ID copied to clipboard</Text>

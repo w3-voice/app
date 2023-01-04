@@ -12,7 +12,7 @@ import { useStores } from "../models";
 
 export const QRCodeScannerScreen: FC<StackScreenProps<ChatScreenProps<"QRCodeScanner">>> = observer(function QRCodeScanner() {
   // Pull in one of our MST stores
-  const { chatStore: {newContact:{setId, setName}} } = useStores()
+  const { contactStore: {form:{setId, setName}} } = useStores()
   const navigation = useNavigation()
   const [hasPermission, setHasPermission] = useState(false);
   const devices = useCameraDevices();
@@ -45,7 +45,6 @@ export const QRCodeScannerScreen: FC<StackScreenProps<ChatScreenProps<"QRCodeSca
   useEffect(() => {
     (async () => {
       const status = await Camera.requestCameraPermission();
-      console.log(status)
       setHasPermission(status === 'authorized');
     })();
   }, []);

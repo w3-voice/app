@@ -3,7 +3,9 @@ import { CompositeScreenProps } from "@react-navigation/native"
 import { createStackNavigator, StackScreenProps } from "@react-navigation/stack"
 import {
   ChatListScreen,
-  ChatScreen
+  ChatScreen,
+  ChatListHeaderMenu,
+  NewContactScreenHeaderRight
 } from "../screens"
 import {
   PaperHeader
@@ -39,7 +41,7 @@ export const ChatNavigator = () => {
         header: (props) => <PaperHeader {...props} /> }}>
         <Stack.Screen name="ChatList"
           component={ChatListScreen}
-          options={{ title: 'Hello World' }}
+          options={{ title: 'Hello World', headerRight:ChatListHeaderMenu }}
         />
         <Stack.Screen name="Chat" component={ChatScreen} />
         <Stack.Screen name="NewChat" 
@@ -48,7 +50,7 @@ export const ChatNavigator = () => {
         />
         <Stack.Screen name="NewContact"
           component={NewContactScreen}
-          options={{ title: 'New Contact' }}
+          options={{ title: 'New Contact', headerRight:NewContactScreenHeaderRight }}
          />
         <Stack.Screen name="ScanNewContact"
          component={QRCodeScannerScreen} 

@@ -19,9 +19,12 @@ const en = {
     btScan: "Scan Contact"
   },
   createIdentity: {
-    title:"Create new identity",
-    message: "Welcome to Messenger",
-    instruction: "Please Enter User Name",
+    message: `Welcome to (still no name)
+thank's for testing this new messenger
+joining is very easy just pick a name and you are good to go.
+    `,
+    instruction: "Please pick a name",
+    join: "Join"
   },
   errorScreen: {
     title: "Something went wrong!",

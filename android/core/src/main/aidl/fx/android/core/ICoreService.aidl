@@ -10,10 +10,6 @@ import fx.android.core.IListener;
 
 interface ICoreService {
     /**
-     * add new contact
-     */
-    boolean addContact(String id, String name);
-    /**
     * get chat info
     */
     String getChat(String id);
@@ -21,6 +17,10 @@ interface ICoreService {
     * get list of chat info
     */
     String getChats(int skip, int limit);
+    /**
+    * add new contact
+    */
+    boolean addContact(String id, String name);
     /**
     * get contact info
     */
@@ -61,18 +61,15 @@ interface ICoreService {
     * Send a text Message
     */
     String sendMessage(String chatID, String text);
-
-        /**
-         * Often you want to allow a service to call back to its clients.
-         * This shows how to do so, by registering a callback interface with
-         * the service.
-         */
+    /**
+    * Often you want to allow a service to call back to its clients.
+    * This shows how to do so, by registering a callback interface with
+    * the service.
+    */
     oneway void registerListener(IListener cb);
-
-        /**
-         * Remove a previously registered callback interface.
-         */
+    /**
+     * Remove a previously registered callback interface.
+     */
     oneway void unregisterListener(IListener cb);
-
 
 }
