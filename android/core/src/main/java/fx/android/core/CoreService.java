@@ -91,20 +91,6 @@ public class CoreService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         Log.i("IsolatedService", "Task removed in " + this + ": " + rootIntent);
-        Intent restartServiceIntent = new Intent(getApplicationContext(), this.getClass());
-        restartServiceIntent.setPackage(getPackageName());
-
-        PendingIntent restartServicePendingIntent = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            restartServicePendingIntent = PendingIntent.getService(getApplicationContext(), 1, restartServiceIntent, PendingIntent.FLAG_IMMUTABLE);
-        } else {
-            restartServicePendingIntent = PendingIntent.getService(getApplicationContext(), 1, restartServiceIntent, FLAG_ONE_SHOT);
-        }
-        AlarmManager alarmService = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-        alarmService.set(
-                AlarmManager.ELAPSED_REALTIME,
-                SystemClock.elapsedRealtime() + 1000,
-                restartServicePendingIntent);
         core.stop();
         super.onTaskRemoved(rootIntent);
     }
