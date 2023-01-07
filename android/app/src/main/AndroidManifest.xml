@@ -41,23 +41,17 @@
         <service
             android:name=".HoodChatService"
             android:enabled="true"
-            android:exported="false"
+            android:exported="true"
             android:label="Notification"
-            android:process=":remote"/>
-        <service
-            android:name=".CoreTileService"
-            android:label="@string/default_tile_label"
-            android:icon="@drawable/default_tile_icon"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
-            android:exported="false">
-            <meta-data android:name="android.service.quicksettings.ACTIVE_TILE"
-                android:value="true" />
-            <meta-data android:name="android.service.quicksettings.TOGGLEABLE_TILE"
-                android:value="true" />
+            android:process=":remote" />
+        <receiver android:name=".service_manager.AutoStart"
+            android:exported="true" android:enabled="true">
             <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
-    </service>
+        </receiver>
+        <receiver android:name=".service_manager.LocalReceiver" android:exported="true" android:enabled="true">
 
-</application>
+        </receiver>
+    </application>
 </manifest>
