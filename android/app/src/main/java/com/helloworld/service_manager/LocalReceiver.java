@@ -1,22 +1,14 @@
 package com.helloworld.service_manager;
 
-import static android.app.PendingIntent.FLAG_ONE_SHOT;
-
-import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.os.Build;
-import android.os.IBinder;
 import android.os.PowerManager;
-import android.os.SystemClock;
 import android.util.Log;
 
-import com.helloworld.CoreModule;
 import com.helloworld.HoodChatService;
 
 public class LocalReceiver extends BroadcastReceiver {
@@ -36,6 +28,7 @@ public class LocalReceiver extends BroadcastReceiver {
     }
 
     public void startMainService(Context context) {
+        Log.d(TAG, "startMainService: local broad cast start");
         Intent intent = new Intent(context, LocalReceiver.class);
         PendingIntent broadcast = PendingIntent.getBroadcast(context, REQUEST_CODE, intent, PendingIntent.FLAG_IMMUTABLE);
     }
