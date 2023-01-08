@@ -1,5 +1,6 @@
 package fx.android.core;
 
+import static android.app.PendingIntent.FLAG_IMMUTABLE;
 import static android.app.PendingIntent.FLAG_ONE_SHOT;
 
 import android.app.AlarmManager;
@@ -7,10 +8,13 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.util.Log;
@@ -85,14 +89,6 @@ public class CoreService extends Service {
         emitter.setLocalListener(mlistener);
         initing = false;
         inited = true;
-    }
-
-
-    @Override
-    public void onTaskRemoved(Intent rootIntent) {
-        Log.i("IsolatedService", "Task removed in " + this + ": " + rootIntent);
-        core.stop();
-        super.onTaskRemoved(rootIntent);
     }
 
     private void createNotificationChannel() {
@@ -188,14 +184,42 @@ public class CoreService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        showServiceNotification();
         return START_STICKY;
     }
+
+    public void resist() {
+        Intent intent = new Intent(getApplicationContext(), getClass());
+        intent.setPackage(getPackageName());
+        PowerManager.WakeLock wakeLock = ((PowerManager) this.getSystemService(Context.POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, ":remote");
+        wakeLock.acquire(60 * 1L); //It will keep the device awake & register the service within 1 minute time duration.
+        this.getPackageManager().setComponentEnabledSetting(new ComponentName(this, this.getClass()), PackageManager.COMPONENT_ENABLED_STATE_DEFAULT, PackageManager.DONT_KILL_APP);
+        PendingIntent restartServicePendingIntent = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            restartServicePendingIntent = PendingIntent.getForegroundService(getApplicationContext(), 1, intent, FLAG_IMMUTABLE);
+        }
+
+
+        AlarmManager alarmService = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+        alarmService.set(
+                AlarmManager.ELAPSED_REALTIME,
+                SystemClock.elapsedRealtime() + 5000,
+                restartServicePendingIntent);
+        wakeLock.release();
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        Log.i(NAME, "Task removed in " + this + ": " + rootIntent);
+        resist();
+        super.onTaskRemoved(rootIntent);
+    }
+
 
     @Override
     public void onDestroy() {
         Log.i(NAME, "core service destroyed");
         core.stop();
+        resist();
         Toast.makeText(this, R.string.local_service_stopped, Toast.LENGTH_SHORT).show();
     }
 

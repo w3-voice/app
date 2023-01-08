@@ -1,6 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.helloworld">
 
+    <permission
+        android:name="START_SERVICE"
+        android:protectionLevel="signature" />
+    <permission
+        android:name="ACCESS_CHAT_SERVICE"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="com.helloworld.ACCESS_CHAT_SERVICE" />
+    <uses-permission android:name="com.helloworld.START_SERVICE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_SERVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -10,6 +19,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
 
     <queries>
@@ -30,7 +40,6 @@
             android:name=".MainActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
             android:exported="true"
-            android:label="@string/app_name"
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -42,16 +51,26 @@
             android:name=".HoodChatService"
             android:enabled="true"
             android:exported="true"
+            android:stopWithTask="false"
             android:label="Notification"
-            android:process=":remote" />
-        <receiver android:name=".service_manager.AutoStart"
-            android:exported="true" android:enabled="true">
+            android:process=":remote"
+            android:permission="ACCESS_CHAT_SERVICE" />
+        <receiver
+            android:name=".service_manager.AutoStart"
+            android:permission="com.helloworld.START_SERVICE"
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="com.helloworld.Start" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".service_manager.LocalReceiver" android:exported="true" android:enabled="true">
-
+        <!-- this still not working -->
+        <receiver
+            android:name=".service_manager.LocalReceiver"
+            android:permission="com.helloworld.START_SERVICE"
+            android:enabled="true"
+            android:exported="true">
         </receiver>
     </application>
 </manifest>

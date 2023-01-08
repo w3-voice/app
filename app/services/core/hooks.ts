@@ -9,7 +9,6 @@ export function useCore(): [boolean, Error | null] {
     useEffect(() => {
         api.beeCore.bindService()
         .then((v)=>{
-            console.log("bind", v)
             setLoaded(true)
         }).catch((e)=>{
           console.log("can not bind", e)
