@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 
-import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -20,16 +19,13 @@ import androidx.annotation.Nullable;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.bridge.Arguments;
 
-import java.lang.ref.WeakReference;
 import java.util.Objects;
 
 import fx.android.core.ICoreService;
@@ -44,26 +40,23 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
     Callback callBack = null;
     boolean cBound = false;
     final Handler timeoutHandler = new Handler(Looper.getMainLooper());
-    ReactApplicationContext context = null;
-    private InternalHandler mHandler;
+    private EventRelay mHandler;
 
     public CoreModule(ReactApplicationContext reactContext) throws Exception {
         super(reactContext);
-        context = reactContext;
     }
 
     private boolean bindRequest() {
         Intent intent = new Intent(getCurrentActivity(), HoodChatService.class);
-        return Objects.requireNonNull(getCurrentActivity()).bindService(intent, connection, Context.BIND_AUTO_CREATE);
+        return Objects.requireNonNull(getCurrentActivity()).bindService(intent, connection, Context.BIND_ABOVE_CLIENT);
     }
 
     private void startService() {
-        Intent intent = new Intent(getCurrentActivity(), HoodChatService.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent);
-        } else {
-            context.startService(intent);
-        }
+        Log.d(TAG, "startService: statrting service");
+        Intent intent = new Intent();
+        intent.setAction("com.helloworld.Start");
+        intent.setPackage(getReactApplicationContext().getPackageName());
+        getReactApplicationContext().sendBroadcast(intent);
     }
 
     // Not working as is should
@@ -95,10 +88,8 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
         return NAME;
     }
 
-    private void sendEvent(ReactContext reactContext,
-            String eventName,
-            @Nullable WritableMap params) {
-        reactContext
+    public void sendEvent(String eventName, @Nullable WritableMap params) {
+        getReactApplicationContext()
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                 .emit(eventName, params);
     }
@@ -122,14 +113,10 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
         if (callBack != null) {
             return;
         }
-
-        mHandler = new InternalHandler(this);
-        boolean res = bindRequest();
+        mHandler = new EventRelay(this);
+        startService();
+        bindRequest();
         callBack = cb;
-        if (!res) {
-            startService();
-        }
-
     }
 
     @ReactMethod
@@ -211,10 +198,9 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
             public void run() {
                 try {
                     String res = cService.getContact(id);
-                    Log.d(CoreModule.NAME, "chat is ready");
                     if (res == null) {
-                        promise.reject(new Error("fail to fetch cotact"));
-                        Log.d(CoreModule.NAME, "fail to fetch cotact");
+                        promise.reject(new Error("fail to fetch contact"));
+                        Log.d(CoreModule.NAME, "fail to fetch contact");
                     } else {
                         promise.resolve(res);
                     }
@@ -308,6 +294,7 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
             }
         }).start();
     }
+
     @ReactMethod
     public void getMessages(String chatID, int skip, int limit, Promise promise) {
         new Thread(new Runnable() {
@@ -423,7 +410,6 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             Log.d(className.getClassName(), "bind connected");
             cService = (ICoreService) ICoreService.Stub.asInterface(service);
-
             try {
                 cService.registerListener(mlistener);
             } catch (RemoteException e) {
@@ -432,6 +418,7 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
             cBound = true;
             callBack.invoke(true);
             callBack = null;
+
             Log.d(CoreModule.NAME, "client connected to service");
 
         }
@@ -443,7 +430,7 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
                 callBack.invoke(false);
                 callBack = null;
             } else {
-                cBound = recoverService(5);
+                cBound = false;
             }
         }
 
@@ -462,38 +449,10 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
             MessageStatusEvent evt = new MessageStatusEvent();
             Message msg = new Message();
             msg.obj = event;
-            msg.what = EVT;
+            msg.what = EventRelay.EVT;
             mHandler.handleMessage(msg);
-
         }
     };
-    private static final int EVT = 0;
 
-    private static class InternalHandler extends Handler {
-
-        private final WeakReference<CoreModule> weakCoreModule;
-
-        InternalHandler(CoreModule coreModule) {
-            weakCoreModule = new WeakReference<>(coreModule);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            if (msg.what == EVT) {
-                CoreModule coreModule = weakCoreModule.get();
-                if (coreModule != null) {
-                    IEvent object = (IEvent) msg.obj;
-                    WritableMap params = Arguments.createMap();
-                    params.putString("name", object.name);
-                    params.putString("action", object.action);
-                    params.putString("payload", object.payload);
-                    params.putString("group", object.group);
-                    coreModule.sendEvent(coreModule.context, "CoreEvents", params);
-                }
-            } else {
-                super.handleMessage(msg);
-            }
-        }
-    }
 
 }

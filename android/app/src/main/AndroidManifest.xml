@@ -1,6 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.helloworld">
 
+    <permission
+        android:name="START_SERVICE"
+        android:protectionLevel="signature" />
+    <permission
+        android:name="ACCESS_CHAT_SERVICE"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="com.helloworld.ACCESS_CHAT_SERVICE" />
+    <uses-permission android:name="com.helloworld.START_SERVICE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_SERVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -10,6 +19,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
 
     <queries>
@@ -30,7 +40,6 @@
             android:name=".MainActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
             android:exported="true"
-            android:label="@string/app_name"
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -41,23 +50,25 @@
         <service
             android:name=".HoodChatService"
             android:enabled="true"
-            android:exported="false"
+            android:exported="true"
+            android:stopWithTask="false"
             android:label="Notification"
-            android:process=":remote"/>
-        <service
-            android:name=".CoreTileService"
-            android:label="@string/default_tile_label"
-            android:icon="@drawable/default_tile_icon"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:process=":remote"
+            android:permission="ACCESS_CHAT_SERVICE" />
+        <receiver
+            android:name=".service_manager.AutoStart"
+            android:enabled="true"
             android:exported="false">
-            <meta-data android:name="android.service.quicksettings.ACTIVE_TILE"
-                android:value="true" />
-            <meta-data android:name="android.service.quicksettings.TOGGLEABLE_TILE"
-                android:value="true" />
             <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="com.helloworld.Start" />
             </intent-filter>
-    </service>
-
-</application>
+        </receiver>
+        <!-- this still not working -->
+        <receiver
+            android:name=".service_manager.LocalReceiver"
+            android:enabled="true"
+            android:exported="false">
+        </receiver>
+    </application>
 </manifest>
