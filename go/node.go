@@ -39,11 +39,11 @@ var DefaultResolver = net.Resolver{
 	},
 }
 
-type MobileHost struct {
+type MobileNode struct {
 	config *HostConfig
 }
 
-func NewMobileHost(conf *HostConfig) core.HostBuilder {
+func NewMobileNode(conf *HostConfig) core.Builder {
 	if conf == nil {
 		conf = NewHostConfig()
 	}
@@ -68,7 +68,7 @@ func NewMobileHost(conf *HostConfig) core.HostBuilder {
 		}
 	}
 
-	mb := MobileHost{
+	mb := MobileNode{
 		config: conf,
 	}
 
@@ -76,7 +76,7 @@ func NewMobileHost(conf *HostConfig) core.HostBuilder {
 
 }
 
-func (m MobileHost) Create(opt core.Option) (host.Host, error) {
+func (m MobileNode) Create(opt core.Option) (host.Host, error) {
 	log.Debug("create called")
 	basicHost, err := libp2p.New(opt.LpOpt...)
 	if err != nil {
@@ -122,7 +122,7 @@ var ListenAddrs = func(cfg *config.Config) error {
 	if err != nil {
 		return err
 	}
-	quicListenAddr, err := multiaddr.NewMultiaddr("/ip4/0.0.0.0/udp/0/quic")
+	quicListenAddr, err := multiaddr.NewMultiaddr("/ip4/0.0.0.0/udp/0/quic-v1")
 	if err != nil {
 		return err
 	}
@@ -154,7 +154,7 @@ func Option() core.Option {
 
 	opt := []libp2p.Option{
 		ListenAddrs,
-		libp2p.EnableAutoRelay(autorelay.WithStaticRelays(bts)),
+		libp2p.EnableAutoRelay(autorelay.WithStaticRelays(bts), autorelay.WithNumRelays(1)),
 		libp2p.EnableNATService(),
 		libp2p.EnableHolePunching(),
 		libp2p.MultiaddrResolver(maRslv),

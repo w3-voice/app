@@ -13,5 +13,5 @@ func TestGetChats(t *testing.T) {
 
 	br.core.SignUp("farhoud")
 	require.Equal(t, br.core.IsLogin(), true)
-	select{}
+
 }

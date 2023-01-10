@@ -20,7 +20,7 @@ func NewBridge(repoPath string, conf *HostConfig) (*Bridge, error) {
 	if conf.emitter != nil {
 		SetEmitter(conf.emitter)
 	}
-	hb := NewMobileHost(conf)
+	hb := NewMobileNode(conf)
 	if hb == nil {
 		panic("new hb failed")
 	}
