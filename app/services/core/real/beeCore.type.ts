@@ -1,3 +1,5 @@
+import { EmitterSubscription } from "react-native"
+
 export interface BeeCoreInstance {
   chat: IChat
   pchat: IPrivateChat
@@ -6,7 +8,7 @@ export interface BeeCoreInstance {
   messages: IMessages
   permissions: IPermissions
   bindService(): Promise<boolean>
-  subscribe(callback: (event: any) => void): void
+  subscribe(callback: (event: any) => void): EmitterSubscription
   unsubscribe(): void
 }
 

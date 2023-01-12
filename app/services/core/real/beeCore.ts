@@ -13,7 +13,7 @@ import {
     IPermissions,
     PermissionStatus
 } from "./beeCore.type";
-import { NativeEventEmitter, NativeModules } from 'react-native';
+import { EmitterSubscription, NativeEventEmitter, NativeModules } from 'react-native';
 const { CoreModule, PermissionsModule } = NativeModules;
 import 'fastestsmallesttextencoderdecoder';
 import { Buffer } from 'buffer';
@@ -163,13 +163,15 @@ class RNBeeCore implements BeeCoreInstance {
         })
     }
 
-    subscribe(callback: (event: any) => void) {
-        this.eventListeners.push(this.nativeEmitter.addListener('CoreEvents', callback));
+    subscribe(callback: (event: any) => void): EmitterSubscription{
+        let subscription = this.nativeEmitter.addListener('CoreEvents', callback);
+        console.log("subscribed")
+        return subscription
     }
 
     unsubscribe() {
         this.nativeEmitter.removeAllListeners('CoreEvents')
-        this.eventListeners = []
+        console.log("unsubscribed")
     }
 
 }
