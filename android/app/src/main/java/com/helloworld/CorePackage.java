@@ -10,6 +10,7 @@ import com.facebook.react.uimanager.ViewManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import com.helloworld.service_manager.PermissionsModule;
 
 public class CorePackage implements ReactPackage {
     @NonNull
@@ -18,6 +19,7 @@ public class CorePackage implements ReactPackage {
         List<NativeModule> modules = new ArrayList<>();
         try {
             modules.add(new CoreModule(reactContext));
+            modules.add(new PermissionsModule(reactContext));
         }catch (Exception e){
             e.printStackTrace();
         }

@@ -4,6 +4,7 @@ export interface BeeCoreInstance {
   contact: IContact
   identity: IIdentity
   messages: IMessages
+  permissions: IPermissions
   bindService(): Promise<boolean>
   subscribe(callback: (event: any) => void): void
   unsubscribe(): void
@@ -36,6 +37,14 @@ export interface IIdentity {
   get(): Promise<Identity>
   has(): Promise<boolean>
   create(name: string): Promise<Identity>
+}
+
+export interface IPermissions {
+  status(): Promise<PermissionStatus>
+  doneAsking(): void
+  requestDisablePowerSaving(): void
+  requestEnableAutoStart(): void
+  openAppInfo():void
 }
 
 export type ID = string
@@ -73,4 +82,11 @@ export interface Event {
   action: string,
   group: string,
   payload: string
+}
+
+export interface PermissionStatus {
+  supported: boolean
+  autostart: boolean
+  powersave: boolean
+  isAsked:   boolean
 }

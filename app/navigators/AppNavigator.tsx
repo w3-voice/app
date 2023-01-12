@@ -18,7 +18,7 @@ import { useColorScheme } from "react-native"
 import Config from "../config"
 import { useStores } from "../models"
 import {
-  CreateIdentityScreen,
+  CreateIdentityScreen, PermissionScreen,
 } from "../screens"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 import { ChatNavigator,ChatNavigatorParamList } from "./ChatNavigator"
@@ -38,6 +38,7 @@ import { ChatNavigator,ChatNavigatorParamList } from "./ChatNavigator"
  */
 export type AppStackParamList = {
   CreateIdentity: undefined,
+  Permissions: undefined,
   ChatNavigator: NavigatorScreenParams<ChatNavigatorParamList>
   // 🔥 Your screens go here
 }
@@ -59,22 +60,16 @@ const Stack = createNativeStackNavigator<AppStackParamList>()
 const AppStack = observer(function AppStack() {
   const {
     identityStore: { isLoggedIn },
+    permissionStore
   } = useStores()
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName={isLoggedIn ? "ChatNavigator" : "CreateIdentity"}
+      initialRouteName={initialRouteName(permissionStore.isAsked,isLoggedIn)}
     >
-      {isLoggedIn ? (
-        <>
-          <Stack.Screen name="ChatNavigator" component={ChatNavigator} />
-        </>
-      ) : (
-        <>
-          <Stack.Screen name="CreateIdentity" component={CreateIdentityScreen} />
-        </>
-      )}
-      {/** 🔥 Your screens go here */}
+      {isLoggedIn && permissionStore.isAsked && <Stack.Screen name="ChatNavigator" component={ChatNavigator} /> }
+      {!isLoggedIn && permissionStore.isAsked && <Stack.Screen name="CreateIdentity" component={CreateIdentityScreen} /> }
+      {!permissionStore.isAsked && <Stack.Screen name="Permissions" component={PermissionScreen} /> }
     </Stack.Navigator>
   )
 })
@@ -96,3 +91,11 @@ export const AppNavigator = observer(function AppNavigator(props: NavigationProp
     </NavigationContainer>
   )
 })
+
+
+const initialRouteName = (isAsked: boolean, isLoggedIn: boolean) => {
+  if(!isAsked){
+    return "Permissions"
+  }
+  return isLoggedIn ? "ChatNavigator" : "CreateIdentity"
+}

@@ -19,7 +19,7 @@ export const QRCodeModalScreen: FC<StackScreenProps<ChatScreenProps<"QRCodeModal
         navigation.goBack()
     }
     return (
-        <Portal>
+        <Portal.Host>
             <Modal visible={visibility} onDismiss={dismiss} contentContainerStyle={$containerStyle}>
                 
                 <QRCode
@@ -28,7 +28,7 @@ export const QRCodeModalScreen: FC<StackScreenProps<ChatScreenProps<"QRCodeModal
                 />
                 <Text style={$textStyle}>ID copied to clipboard</Text>
             </Modal>
-        </Portal>
+        </Portal.Host>
     )
 })
 
