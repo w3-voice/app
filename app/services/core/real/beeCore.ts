@@ -1,6 +1,20 @@
-import { BeeCoreInstance, Chat, Contact, IChat, IContact, ID, Identity, IIdentity, IMessages, IPrivateChat, Message } from "./beeCore.type";
-import { NativeEventEmitter, NativeModules } from 'react-native';
-const { CoreModule } = NativeModules;
+import {
+    BeeCoreInstance,
+    Chat,
+    Contact,
+    IChat,
+    IContact,
+    ID,
+    Identity,
+    IIdentity,
+    IMessages,
+    IPrivateChat,
+    Message,
+    IPermissions,
+    PermissionStatus
+} from "./beeCore.type";
+import { EmitterSubscription, NativeEventEmitter, NativeModules } from 'react-native';
+const { CoreModule, PermissionsModule } = NativeModules;
 import 'fastestsmallesttextencoderdecoder';
 import { Buffer } from 'buffer';
 
@@ -60,7 +74,7 @@ class ContactAPI implements IContact {
         const con: Contact[] = base64ToObject(res)
         return con
     }
-    
+
 }
 
 class IdentityAPI implements IIdentity {
@@ -77,7 +91,7 @@ class IdentityAPI implements IIdentity {
         const id: Identity = base64ToObject(res)
         return id
     }
-    
+
 }
 
 class MessageAPI implements IMessages {
@@ -91,7 +105,26 @@ class MessageAPI implements IMessages {
         const msgs: Message[] = base64ToObject(res)
         return msgs
     }
-    
+
+}
+
+class PermissionsAPI implements IPermissions {
+    openAppInfo(): void {
+        PermissionsModule.openAppInfo()
+    }
+    status(): Promise<PermissionStatus> {
+        return PermissionsModule.getState()
+    }
+    doneAsking(): void {
+        PermissionsModule.doneAsking()
+    }
+    requestDisablePowerSaving(): void {
+        PermissionsModule.doActionPowerSaving()
+    }
+    requestEnableAutoStart(): void {
+        PermissionsModule.doActionAutoStart()
+    }
+
 }
 
 class RNBeeCore implements BeeCoreInstance {
@@ -103,6 +136,7 @@ class RNBeeCore implements BeeCoreInstance {
     contact: IContact;
     identity: IIdentity;
     messages: IMessages;
+    permissions: IPermissions;
 
     constructor() {
         this.nativeEmitter = new NativeEventEmitter(CoreModule)
@@ -111,6 +145,7 @@ class RNBeeCore implements BeeCoreInstance {
         this.contact = new ContactAPI()
         this.identity = new IdentityAPI()
         this.messages = new MessageAPI()
+        this.permissions = new PermissionsAPI()
     }
 
 
@@ -128,13 +163,15 @@ class RNBeeCore implements BeeCoreInstance {
         })
     }
 
-    subscribe(callback: (event: any) => void) {
-        this.eventListeners.push(this.nativeEmitter.addListener('CoreEvents', callback));
+    subscribe(callback: (event: any) => void): EmitterSubscription{
+        let subscription = this.nativeEmitter.addListener('CoreEvents', callback);
+        console.log("subscribed")
+        return subscription
     }
 
     unsubscribe() {
         this.nativeEmitter.removeAllListeners('CoreEvents')
-        this.eventListeners = []
+        console.log("unsubscribed")
     }
 
 }

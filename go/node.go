@@ -39,11 +39,11 @@ var DefaultResolver = net.Resolver{
 	},
 }
 
-type MobileHost struct {
+type MobileNode struct {
 	config *HostConfig
 }
 
-func NewMobileHost(conf *HostConfig) core.HostBuilder {
+func NewMobileNode(conf *HostConfig) core.Builder {
 	if conf == nil {
 		conf = NewHostConfig()
 	}
@@ -68,7 +68,7 @@ func NewMobileHost(conf *HostConfig) core.HostBuilder {
 		}
 	}
 
-	mb := MobileHost{
+	mb := MobileNode{
 		config: conf,
 	}
 
@@ -76,7 +76,7 @@ func NewMobileHost(conf *HostConfig) core.HostBuilder {
 
 }
 
-func (m MobileHost) Create(opt core.Option) (host.Host, error) {
+func (m MobileNode) Create(opt core.Option) (host.Host, error) {
 	log.Debug("create called")
 	basicHost, err := libp2p.New(opt.LpOpt...)
 	if err != nil {
@@ -94,7 +94,7 @@ func (m MobileHost) Create(opt core.Option) (host.Host, error) {
 		return nil, err
 	}
 	btconf := bootstrap.BootstrapConfigWithPeers(bt)
-	btconf.MinPeerThreshold = 1
+	btconf.MinPeerThreshold = 2
 
 	// connect to the chosen ipfs nodes
 
@@ -122,7 +122,7 @@ var ListenAddrs = func(cfg *config.Config) error {
 	if err != nil {
 		return err
 	}
-	quicListenAddr, err := multiaddr.NewMultiaddr("/ip4/0.0.0.0/udp/0/quic")
+	quicListenAddr, err := multiaddr.NewMultiaddr("/ip4/0.0.0.0/udp/0/quic-v1")
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ var ListenAddrs = func(cfg *config.Config) error {
 
 func Option() core.Option {
 
-	bts, err := core.ParseBootstrapPeers(core.BootstrapNodes)
+	bts, err := core.ParseBootstrapPeers(core.StaticRelays)
 	if err != nil {
 		panic(err)
 	}
@@ -154,11 +154,9 @@ func Option() core.Option {
 
 	opt := []libp2p.Option{
 		ListenAddrs,
-		libp2p.EnableAutoRelay(autorelay.WithStaticRelays(bts)),
+		libp2p.EnableAutoRelay(autorelay.WithStaticRelays(bts), autorelay.WithCircuitV1Support()),
 		libp2p.EnableNATService(),
-		libp2p.EnableHolePunching(),
 		libp2p.MultiaddrResolver(maRslv),
-		// libp2p.ForceReachabilityPrivate(),
 	}
 	return core.Option{
 		LpOpt: opt,

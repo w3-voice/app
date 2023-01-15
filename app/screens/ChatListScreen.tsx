@@ -5,12 +5,13 @@ import { ViewStyle } from "react-native"
 import { StackScreenProps } from "@react-navigation/stack"
 import { ChatScreenProps } from "../navigators"
 import { Screen } from "../components"
-import { useNavigation } from "@react-navigation/native"
+import { useFocusEffect, useNavigation } from "@react-navigation/native"
 import { useStores } from "../models"
 import { Appbar, FAB, Menu } from 'react-native-paper';
 import { List } from 'react-native-paper';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { HeaderButtonProps } from "@react-navigation/native-stack/lib/typescript/src/types";
+import coreSync from "../models/helpers/coreSync";
 
 const MORE_ICON = Platform.OS === 'ios' ? 'dots-horizontal' : 'dots-vertical';
 
@@ -20,7 +21,7 @@ export const ChatListHeaderMenu = (_props: HeaderButtonProps) => {
   const [visible, setVisible] = React.useState(false);
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
-  const {identityStore} = useStores()
+  const { identityStore } = useStores()
 
   const copyID = () => {
     Clipboard.setString(identityStore.user._id)
@@ -28,7 +29,7 @@ export const ChatListHeaderMenu = (_props: HeaderButtonProps) => {
     closeMenu()
   }
 
-  const newContact = ()=>{
+  const newContact = () => {
     navigation.navigate("NewContact")
   }
   return (
@@ -48,6 +49,12 @@ export const ChatListScreen: FC<StackScreenProps<ChatScreenProps<"ChatList">>> =
   const { chatStore } = useStores()
   // Pull in navigation via hook
   const navigation = useNavigation()
+
+  useFocusEffect(() => {
+    chatStore.loadChatList()
+    const sub = coreSync(chatStore)
+    return () => sub.remove()
+  });
 
   const navigateItem = (id) => {
     return () => {

@@ -1,5 +1,5 @@
 import { flow, Instance, SnapshotIn, SnapshotOut, types } from "mobx-state-tree"
-import { ChatModel, Chat } from "./Chat"
+import { ChatModel } from "./Chat"
 import { api } from "../services/core"
 import { Message, MessageModel } from "./Message"
 import { getRootStore } from "./helpers/getRootStore"

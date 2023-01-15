@@ -81,7 +81,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
 
 project.ext.react = [
     enableHermes: true,  // clean and rebuild if changing
-    deleteDebugFilesForVariant: { false }
+//    deleteDebugFilesForVariant: { true }
 ]
 
 // This method of including other gradle files is to support symlinks.
@@ -275,6 +275,7 @@ dependencies {
     //noinspection GradleDynamicVersion
     implementation "com.facebook.react:react-native:+"
     implementation project(path: ':core')
+    implementation 'io.github.wulkanowy:AppKillerManager:3.0.0'
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";

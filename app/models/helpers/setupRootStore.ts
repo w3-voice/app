@@ -32,8 +32,7 @@ export async function setupRootStore(rootStore: RootStore) {
     if (!_subscribed){
       const bonded = await api.beeCore.bindService()
       await rootStore.identityStore.loadIdentity()
-      await rootStore.chatStore.loadChatList()
-      coreSync(rootStore.chatStore)
+      await rootStore.permissionStore.load()
       _subscribed = true;
     }
    

@@ -8,6 +8,8 @@
         android:name="ACCESS_CHAT_SERVICE"
         android:protectionLevel="signature" />
 
+    <uses-permission
+        android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
     <uses-permission android:name="com.helloworld.ACCESS_CHAT_SERVICE" />
     <uses-permission android:name="com.helloworld.START_SERVICE" />
     <uses-permission android:name="android.permission.INTERNET" />
