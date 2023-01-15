@@ -94,7 +94,7 @@ func (m MobileNode) Create(opt core.Option) (host.Host, error) {
 		return nil, err
 	}
 	btconf := bootstrap.BootstrapConfigWithPeers(bt)
-	btconf.MinPeerThreshold = 1
+	btconf.MinPeerThreshold = 2
 
 	// connect to the chosen ipfs nodes
 
@@ -141,7 +141,7 @@ var ListenAddrs = func(cfg *config.Config) error {
 
 func Option() core.Option {
 
-	bts, err := core.ParseBootstrapPeers(core.BootstrapNodes)
+	bts, err := core.ParseBootstrapPeers(core.StaticRelays)
 	if err != nil {
 		panic(err)
 	}
@@ -154,11 +154,9 @@ func Option() core.Option {
 
 	opt := []libp2p.Option{
 		ListenAddrs,
-		libp2p.EnableAutoRelay(autorelay.WithStaticRelays(bts), autorelay.WithNumRelays(1)),
+		libp2p.EnableAutoRelay(autorelay.WithStaticRelays(bts), autorelay.WithCircuitV1Support()),
 		libp2p.EnableNATService(),
-		libp2p.EnableHolePunching(),
 		libp2p.MultiaddrResolver(maRslv),
-		// libp2p.ForceReachabilityPrivate(),
 	}
 	return core.Option{
 		LpOpt: opt,
