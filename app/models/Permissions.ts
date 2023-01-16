@@ -9,17 +9,23 @@ export const PermissionsModel = types
     supported: types.boolean,
     autostart: types.boolean,
     powersave: types.boolean,
-    isAsked: types.boolean
+    isAsked: types.boolean,
+    optimization: types.boolean
   })
-  .views((self) => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
+  .views((self) => ({
+    get done(){
+      return (!self.autostart && !self.optimization && !self.powersave && !self.supported) || self.isAsked
+    }
+  })) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions((self) => ({
     load: flow(function* load() {
       const status = yield api.beeCore.permissions.status()
       console.log("load called ", status)
       self.autostart = !!status.autostart
-      self.isAsked = !!status.isAsked
+      self.isAsked = false
       self.powersave = !!status.powersave
       self.supported = !!status.supported
+      self.optimization = !!status.optimization
     }),
     doneAsking: ()=>{
       api.beeCore.permissions.doneAsking()
@@ -36,6 +42,10 @@ export const PermissionsModel = types
     openAppInfo: ()=>{
       api.beeCore.permissions.openAppInfo()
       self.isAsked = true
+    },
+    openBatteryOptimization: ()=>{
+      api.beeCore.permissions.openAppBatteryOptimization()
+      self.optimization = false
     }
   })) // eslint-disable-line @typescript-eslint/no-unused-vars
 
@@ -46,5 +56,6 @@ export const createPermissionsDefaultModel = () => types.optional(PermissionsMod
   supported:false,
   autostart: false,
   powersave: false,
-  isAsked: false
+  isAsked: false,
+  optimization: false
 })

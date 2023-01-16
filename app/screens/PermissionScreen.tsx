@@ -20,7 +20,7 @@ import { useStores } from "../models"
 // @ts-ignore
 export const PermissionScreen: FC<StackScreenProps<AppStackScreenProps, "Permission">> = observer(function PermissionScreen() {
   // Pull in one of our MST stores
-  const { permissionStore: { supported, openAppInfo, powersave, autostart, requestDisablePowerSaving, requestEnableAutoStart, doneAsking } } = useStores()
+  const { permissionStore: { supported, openAppInfo, powersave, autostart, optimization, requestDisablePowerSaving, requestEnableAutoStart, doneAsking, openBatteryOptimization } } = useStores()
   useEffect(() => {
     !powersave && !autostart && doneAsking()
   }, [powersave, autostart])
@@ -32,7 +32,7 @@ export const PermissionScreen: FC<StackScreenProps<AppStackScreenProps, "Permiss
       <View style={$topSection}>
         <Text variant="headlineMedium" style={$header}>Permission</Text>
       </View>
-      {supported &&
+      {supported && !optimization &&
         <View>
           {powersave &&
             <Card style={$cards}>
@@ -40,7 +40,7 @@ export const PermissionScreen: FC<StackScreenProps<AppStackScreenProps, "Permiss
                 <Text variant="bodyLarge">let me run in background and handle your messages</Text>
               </Card.Content>
               <Card.Actions>
-                <Button onPress={()=>{requestDisablePowerSaving()}}>Fix</Button>
+                <Button onPress={() => { requestDisablePowerSaving() }}>Fix</Button>
               </Card.Actions>
             </Card>
           }
@@ -50,13 +50,25 @@ export const PermissionScreen: FC<StackScreenProps<AppStackScreenProps, "Permiss
                 <Text variant="bodyLarge">Let me start on boot</Text>
               </Card.Content>
               <Card.Actions>
-                <Button onPress={()=>{requestEnableAutoStart()}}>Fix</Button>
+                <Button onPress={() => { requestEnableAutoStart() }}>Fix</Button>
               </Card.Actions>
             </Card>
           }
         </View>
       }
-      {!supported &&
+      {optimization &&
+        <View>
+          <Card>
+            <Card.Content>
+              <Text variant="bodyLarge">disable battery optimization</Text>
+            </Card.Content>
+            <Card.Actions>
+              <Button onPress={() => { openBatteryOptimization() }}>Fix</Button>
+            </Card.Actions>
+          </Card>
+        </View>
+      }
+      {!supported && !optimization &&
         (<View>
           <Card style={$cards}>
             <Card.Content>

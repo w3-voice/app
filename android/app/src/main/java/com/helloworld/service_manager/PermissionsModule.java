@@ -1,9 +1,11 @@
 package com.helloworld.service_manager;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.provider.Settings;
 
 import com.thelittlefireman.appkillermanager.AppKillerManager;
 import com.thelittlefireman.appkillermanager.exceptions.NoActionFoundException;
@@ -45,8 +47,18 @@ public class PermissionsModule extends ReactContextBaseJavaModule {
         map.putBoolean("supported", AppKillerManager.isDeviceSupported());
         map.putBoolean("autostart", isPowerSavingAvailable());
         map.putBoolean("powersave", isAutoStartAvailable());
+        map.putBoolean("optimization", isBatteryOptimizationAvailable());
         map.putBoolean("isAsked", isAsked);
         promise.resolve(map);
+    }
+
+    @ReactMethod
+    private void openAppBatteryOptimization()
+    {
+        Intent intent = new Intent();
+        intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        getReactApplicationContext().startActivity(intent);
     }
 
     @ReactMethod
@@ -94,5 +106,18 @@ public class PermissionsModule extends ReactContextBaseJavaModule {
 
     public boolean isAutoStartAvailable() {
         return AppKillerManager.isActionAvailable(getReactApplicationContext(), AppKillerManager.Action.ACTION_POWER_SAVING);
+    }
+
+    public boolean isBatteryOptimizationAvailable() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P)
+        {
+            ActivityManager am = (ActivityManager)getReactApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
+            Boolean isRestricted = am.isBackgroundRestricted();
+            if(isRestricted)
+            {
+               return true;
+            }
+        }
+        return false;
     }
 }
