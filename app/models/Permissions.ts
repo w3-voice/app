@@ -22,7 +22,7 @@ export const PermissionsModel = types
       const status = yield api.beeCore.permissions.status()
       console.log("load called ", status)
       self.autostart = !!status.autostart
-      self.isAsked = false
+      self.isAsked = !!status.isAsked
       self.powersave = !!status.powersave
       self.supported = !!status.supported
       self.optimization = !!status.optimization
