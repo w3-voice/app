@@ -42,6 +42,7 @@ export interface IIdentity {
 }
 
 export interface IPermissions {
+  openAppBatteryOptimization(): void
   status(): Promise<PermissionStatus>
   doneAsking(): void
   requestDisablePowerSaving(): void
