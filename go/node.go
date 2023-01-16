@@ -16,13 +16,13 @@ import (
 	madns "github.com/multiformats/go-multiaddr-dns"
 	manet "github.com/multiformats/go-multiaddr/net"
 
-	ds "github.com/ipfs/go-datastore"
-	dsync "github.com/ipfs/go-datastore/sync"
+	// ds "github.com/ipfs/go-datastore"
+	// dsync "github.com/ipfs/go-datastore/sync"
 
 	logging "github.com/ipfs/go-log/v2"
-	dht "github.com/libp2p/go-libp2p-kad-dht"
+	// dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/p2p/host/autorelay"
-	rh "github.com/libp2p/go-libp2p/p2p/host/routed"
+	// rh "github.com/libp2p/go-libp2p/p2p/host/routed"
 
 	"github.com/ipfs/kubo/core/bootstrap"
 )
@@ -84,12 +84,12 @@ func (m MobileNode) Create(opt core.Option) (host.Host, error) {
 	}
 
 	// Construct a datastore (needed by the DHT). This is just a simple, in-memory thread-safe datastore.
-	dstore := dsync.MutexWrap(ds.NewMapDatastore())
+	// dstore := dsync.MutexWrap(ds.NewMapDatastore())
 
 	// Make the DHT
-	kDht := dht.NewDHT(context.Background(), basicHost, dstore)
+	// kDht := dht.NewDHT(context.Background(), basicHost, dstore)
 
-	bt, err := core.ParseBootstrapPeers(core.BootstrapNodes)
+	bt, err := core.ParseBootstrapPeers(append(core.BootstrapNodes, core.StaticRelays...))
 	if err != nil {
 		return nil, err
 	}
@@ -97,23 +97,22 @@ func (m MobileNode) Create(opt core.Option) (host.Host, error) {
 	btconf.MinPeerThreshold = 2
 
 	// connect to the chosen ipfs nodes
-
-	_, err = bootstrap.Bootstrap(opt.ID, basicHost, kDht, btconf)
+	_, err = bootstrap.Bootstrap(opt.ID, basicHost, nil, btconf)
 	if err != nil {
 		log.Debugf("bootstrap failed. %s", err.Error())
 	}
 
-	// Make the routed host
-	routedHost := rh.Wrap(basicHost, kDht)
-	for _, val := range bt {
-		err = routedHost.Connect(context.Background(), val)
-		if err != nil {
-			log.Errorf("failed to connect to %s bootstraps reason: %s ", val.String(), err.Error())
-		}
-	}
+	// // Make the routed host
+	// routedHost := rh.Wrap(basicHost, kDht)
+	// for _, val := range bt {
+	// 	err = routedHost.Connect(context.Background(), val)
+	// 	if err != nil {
+	// 		log.Errorf("failed to connect to %s bootstraps reason: %s ", val.String(), err.Error())
+	// 	}
+	// }
 
-	log.Debugf("core bootstrapped and ready on: %s", routedHost.Addrs())
-	return routedHost, nil
+	log.Debugf("core bootstrapped and ready on: %s", basicHost.Addrs())
+	return basicHost, nil
 
 }
 
@@ -122,7 +121,11 @@ var ListenAddrs = func(cfg *config.Config) error {
 	if err != nil {
 		return err
 	}
-	quicListenAddr, err := multiaddr.NewMultiaddr("/ip4/0.0.0.0/udp/0/quic-v1")
+	quicv1ListenAddr, err := multiaddr.NewMultiaddr("/ip4/0.0.0.0/udp/0/quic-v1")
+	if err != nil {
+		return err
+	}
+	quicListenAddr, err := multiaddr.NewMultiaddr("/ip4/0.0.0.0/udp/0/quic")
 	if err != nil {
 		return err
 	}
@@ -134,6 +137,7 @@ var ListenAddrs = func(cfg *config.Config) error {
 	return cfg.Apply(libp2p.ListenAddrs(
 		quicListenAddr,
 		ip4ListenAddr,
+		quicv1ListenAddr,
 		ip6ListenAddr,
 	))
 
@@ -141,7 +145,7 @@ var ListenAddrs = func(cfg *config.Config) error {
 
 func Option() core.Option {
 
-	bts, err := core.ParseBootstrapPeers(core.StaticRelays)
+	sr, err := core.ParseBootstrapPeers(core.StaticRelays)
 	if err != nil {
 		panic(err)
 	}
@@ -153,8 +157,9 @@ func Option() core.Option {
 	}
 
 	opt := []libp2p.Option{
+		ResourceManager,
 		ListenAddrs,
-		libp2p.EnableAutoRelay(autorelay.WithStaticRelays(bts), autorelay.WithCircuitV1Support()),
+		libp2p.EnableAutoRelay(autorelay.WithStaticRelays(sr), autorelay.WithCircuitV1Support(),),
 		libp2p.EnableNATService(),
 		libp2p.MultiaddrResolver(maRslv),
 	}
@@ -166,9 +171,12 @@ func Option() core.Option {
 
 var ResourceManager = func(cfg *libp2p.Config) error {
 	// Default memory limit: 1/8th of total memory, minimum 128MB, maximum 1GB
-	limits := rcmgr.DefaultLimits
-	libp2p.SetDefaultServiceLimits(&limits)
-	limiter := rcmgr.NewFixedLimiter(limits.AutoScale())
+	// limits := rcmgr.DefaultLimits
+	
+	limiter := rcmgr.NewFixedLimiter(rcmgr.InfiniteLimits)
+	
+	// libp2p.SetDefaultServiceLimits(limiter)
+	log.Debugf("resource limit:   %v" ,limiter)
 	mgr, err := rcmgr.NewResourceManager(limiter)
 	if err != nil {
 		return err
