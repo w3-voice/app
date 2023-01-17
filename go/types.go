@@ -9,6 +9,7 @@ type Chat struct {
 	ID      string   `json:"_id"`
 	Name    string   `json:"name"`
 	Members []string `json:"members"`
+	Type    int      `json:"type"`
 }
 
 type Message struct {

@@ -11,7 +11,7 @@ func TestGetChats(t *testing.T) {
 	br, err := NewBridge(t.TempDir(),conf)
 	require.NoError(t, err)
 
-	br.core.SignUp("farhoud")
-	require.Equal(t, br.core.IsLogin(), true)
+	br.IdentityAPI().SignUp("farhoud")
+	require.Equal(t, br.IdentityAPI().IsLogin(), true)
 
 }

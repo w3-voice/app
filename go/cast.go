@@ -81,6 +81,7 @@ func (m *BChat) cast() Chat {
 		ID:      m.ID.String(),
 		Name:    m.Name,
 		Members: mids,
+		Type:    int(m.Type),
 	}
 }
 

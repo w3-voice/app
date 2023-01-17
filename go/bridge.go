@@ -1,6 +1,7 @@
 package bridge
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/hood-chat/core"
@@ -13,7 +14,7 @@ import (
 var log = logging.Logger("bridge")
 
 type Bridge struct {
-	core core.Messenger
+	core.MessengerAPI
 }
 
 func NewBridge(repoPath string, conf *HostConfig) (*Bridge, error) {
@@ -25,7 +26,7 @@ func NewBridge(repoPath string, conf *HostConfig) (*Bridge, error) {
 		panic("new hb failed")
 	}
 
-	m := core.MessengerBuilder(repoPath, Option(), hb)
+	m := core.NewMessengerAPI(repoPath, Option(), hb)
 
 	f := &Bridge{m}
 	sub, err := m.EventBus().Subscribe(new(event.EvtObject))
@@ -45,7 +46,7 @@ func NewBridge(repoPath string, conf *HostConfig) (*Bridge, error) {
 }
 
 func (b *Bridge) IsLogin() bool {
-	return b.core.IsLogin()
+	return b.IdentityAPI().IsLogin()
 }
 
 func (b *Bridge) GetInterfaces() (string, error) {
@@ -72,7 +73,7 @@ func (b *Bridge) GetInterfaces() (string, error) {
 }
 
 func (b *Bridge) GetIdentity() (string, error) {
-	idn, err := b.core.GetIdentity()
+	idn, err := b.IdentityAPI().Get()
 	if err != nil {
 		return "", err
 	}
@@ -81,7 +82,7 @@ func (b *Bridge) GetIdentity() (string, error) {
 }
 
 func (b *Bridge) NewIdentity(name string) (string, error) {
-	idn, err := b.core.SignUp(name)
+	idn, err := b.IdentityAPI().SignUp(name)
 	if err != nil {
 		return "", err
 	}
@@ -91,8 +92,7 @@ func (b *Bridge) NewIdentity(name string) (string, error) {
 
 func (b *Bridge) GetChat(id string) (string, error) {
 	chatId := entity.ID(id)
-	msgr := b.core
-	ch, err := msgr.GetChat(chatId)
+	ch, err := b.ChatAPI().ChatInfo(chatId)
 	if err != nil {
 		return "", err
 	}
@@ -101,8 +101,7 @@ func (b *Bridge) GetChat(id string) (string, error) {
 }
 
 func (b *Bridge) GetChats(skip int, limit int) (string, error) {
-	msgr := b.core
-	ch, err := msgr.GetChats(skip, limit)
+	ch, err := b.ChatAPI().ChatInfos(skip, limit)
 	if err != nil {
 		return "", err
 	}
@@ -112,8 +111,7 @@ func (b *Bridge) GetChats(skip int, limit int) (string, error) {
 
 func (b *Bridge) GetMessages(chatID string, skip int, limit int) (string, error) {
 	id := entity.ID(chatID)
-	msgr := b.core
-	msgs, err := msgr.GetMessages(id, skip, limit)
+	msgs, err := b.ChatAPI().Messages(id, skip, limit)
 	if err != nil {
 		return "", err
 	}
@@ -122,18 +120,16 @@ func (b *Bridge) GetMessages(chatID string, skip int, limit int) (string, error)
 }
 
 func (b *Bridge) GetMessageNotification(msgID string) (*Notification, error) {
-	msgr := b.core
-	msg, err := msgr.GetMessage(entity.ID(msgID))
+	msg, err := b.ChatAPI().Message(entity.ID(msgID))
 	if err != nil {
 		return nil, err
 	}
-	return NewNotification(msg.Author.Name,msg.Text), nil
+	return NewNotification(msg.Author.Name, msg.Text), nil
 }
 
 func (b *Bridge) GetMessage(ID string) (string, error) {
 	id := entity.ID(ID)
-	msgr := b.core
-	msg, err := msgr.GetMessage(id)
+	msg, err := b.ChatAPI().Message(entity.ID(id))
 	if err != nil {
 		return "", err
 	}
@@ -142,8 +138,7 @@ func (b *Bridge) GetMessage(ID string) (string, error) {
 }
 
 func (b *Bridge) SendMessage(chatId string, text string) (string, error) {
-	msgr := b.core
-	msg, err := msgr.SendPM(entity.ID(chatId), text)
+	msg, err := b.ChatAPI().Send(entity.ID(chatId), text)
 	if err != nil {
 		return "", err
 	}
@@ -152,8 +147,7 @@ func (b *Bridge) SendMessage(chatId string, text string) (string, error) {
 }
 
 func (b *Bridge) GetContacts(skip int, limit int) (string, error) {
-	msgr := b.core
-	cs, err := msgr.GetContacts(skip, limit)
+	cs, err := b.ContactBookAPI().List(skip, limit)
 	if err != nil {
 		return "", err
 	}
@@ -163,8 +157,7 @@ func (b *Bridge) GetContacts(skip int, limit int) (string, error) {
 
 func (b *Bridge) GetContact(id string) (string, error) {
 	contactID := entity.ID(id)
-	msgr := b.core
-	c, err := msgr.GetContact(contactID)
+	c, err := b.ContactBookAPI().Get(contactID)
 	if err != nil {
 		return "", err
 	}
@@ -172,19 +165,21 @@ func (b *Bridge) GetContact(id string) (string, error) {
 	return res.Serialize()
 }
 
-func (b *Bridge) AddContact(id string, name string) error {
-	msgr := b.core
-	err := msgr.AddContact(entity.Contact{
+func (b *Bridge) PutContact(id string, name string) error {
+	err := b.ContactBookAPI().Put(entity.Contact{
 		ID:   entity.ID(id),
 		Name: name,
 	})
 	return err
 }
 
+func (b *Bridge) Seen(chatID string) error {
+	return b.ChatAPI().Seen(entity.ID(chatID))
+}
+
 func (b Bridge) NewPMChat(contactID string) (string, error) {
 	id := entity.ID(contactID)
-	msgr := b.core
-	pm, err := msgr.CreatePMChat(id)
+	pm, err := b.ChatAPI().New(core.ForPrivateChat(id))
 	if err != nil {
 		return "", err
 	}
@@ -194,15 +189,13 @@ func (b Bridge) NewPMChat(contactID string) (string, error) {
 
 func (b Bridge) GetPMChat(contactID string) (string, error) {
 	id := entity.ID(contactID)
-	msgr := b.core
-	pm, err := msgr.GetPMChat(id)
+	pm, err := b.ChatAPI().Find(core.ForPrivateChat(id))
 	if err != nil {
 		return "", err
 	}
-	res := BChat(pm)
+	if len(pm) == 0 {
+		return "", errors.New("not found")
+	}
+	res := BChat(pm[0])
 	return res.Serialize()
-}
-
-func (b Bridge) Stop() {
-	b.core.Stop()
 }
