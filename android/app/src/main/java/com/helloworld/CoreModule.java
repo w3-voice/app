@@ -370,12 +370,12 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
     }
 
     @ReactMethod
-    public void addContact(String id, String name, Promise promise) {
+    public void putContact(String id, String name, Promise promise) {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    Boolean res = cService.addContact(id, name);
+                    Boolean res = cService.putContact(id, name);
                     promise.resolve(res);
                 } catch (Exception e) {
                     promise.reject(e);
@@ -384,6 +384,20 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
         }).start();
 
     }
+
+    @ReactMethod
+    public void seen(String id) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                   cService.seen(id);
+                } catch (Exception e) {}
+            }
+        }).start();
+
+    }
+
 
     @Override
     public void onHostResume() {
