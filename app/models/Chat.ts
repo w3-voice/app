@@ -1,6 +1,5 @@
 import { Instance, SnapshotIn, SnapshotOut, types } from "mobx-state-tree"
 import { ContactModel } from "./Contact"
-import { MessageModel } from "./Message"
 
 /**
  * Model description here for TypeScript hints.
@@ -11,6 +10,9 @@ export const ChatModel = types
     _id: types.identifier,
     name: types.string,
     members: types.array(types.reference(ContactModel)),
+    type:    types.integer,
+    unread:  types.integer,
+    latestText: types.string
   })
   .views((self) => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions((self) => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
