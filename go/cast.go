@@ -28,7 +28,8 @@ func (m *BMessage) cast() Message {
 		CreatedAt: m.CreatedAt * 1000,
 		ContactID: m.Author.ID.String(),
 		Sent:      m.Status == entity.Sent,
-		Received:  m.Status == entity.Seen,
+		Seen:      m.Status == entity.Seen,
+		Received:  m.Status == entity.Received,
 		Pending:   m.Status == entity.Pending,
 		Failed:    m.Status == entity.Failed,
 	}
@@ -82,6 +83,8 @@ func (m *BChat) cast() Chat {
 		Name:    m.Name,
 		Members: mids,
 		Type:    int(m.Type),
+		LatestText: m.LatestText,
+		Unread: int(m.Unread),
 	}
 }
 
