@@ -16,6 +16,7 @@ export interface IChat {
   get(id: ID): Promise<Chat>
   list(skip: number, limit: number):  Promise<Chat[]>
   send(id: ID, msg: Message): Promise<Message>
+  seen(id: ID): void
 }
 
 export interface IPrivateChat {
@@ -31,7 +32,7 @@ export interface IMessages {
 
 export interface IContact {
   get(id: ID): Promise<Contact>
-  add(con: Contact): Promise<boolean>
+  put(con: Contact): Promise<boolean>
   list(skip: number, limit: number): Promise<Contact[]>
 }
 
@@ -66,6 +67,9 @@ export interface Chat {
   _id: ID,
   name: string,
   members: ID[]
+  type:    number,
+  unread:  number,
+  latestText: string
 }
 
 export interface Message {
