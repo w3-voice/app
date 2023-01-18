@@ -7,7 +7,7 @@ interface Props {
  id : string
 }
 export const MessageStatus: FC<Props>= observer((props: Props) => {
-    const { chatStore: { messages } } = useStores()
+    const { messageStore: { messages } } = useStores()
     const msg = messages.get(props.id)
     return(         
     <View style={$tickView}>
