@@ -273,9 +273,9 @@ public class CoreService extends Service {
             }
         }
 
-        public boolean addContact(String id, String name) throws RemoteException {
+        public boolean putContact(String id, String name) throws RemoteException {
             try {
-                core.addContact(id, name);
+                core.putContact(id, name);
                 return true;
             } catch (Exception e) {
                 return handleCoreException(false, e, "can not add contact");
@@ -308,7 +308,9 @@ public class CoreService extends Service {
 
         public String newIdentity(String name) throws RemoteException {
             try {
-                return core.newIdentity(name);
+                String identity = core.newIdentity(name);
+                core.start();
+                return identity;
             } catch (Exception e) {
                 return handleCoreException(null, e, "failed to retrieve create identity");
             }
@@ -356,12 +358,18 @@ public class CoreService extends Service {
         }
 
         public String sendMessage(String chatID, String text) throws RemoteException {
-            Log.d(NAME, "send called");
+            Log.d(NAME, "send called with: "+chatID +", " +text );
             try {
                 return core.sendMessage(chatID, text);
             } catch (Exception e) {
                 return handleCoreException(null, e, "failed to send private message");
             }
+        }
+
+        public void seen(String chatID) throws RemoteException {
+            try {
+                core.seen(chatID);
+            } catch (Exception e) { }
         }
     };
 
