@@ -19,6 +19,9 @@ import 'fastestsmallesttextencoderdecoder';
 import { Buffer } from 'buffer';
 
 class ChatAPI implements IChat {
+    seen(id: string): void {
+        CoreModule.seen(id)
+    }
 
     async get(id: ID): Promise<Chat> {
         const res = await CoreModule.getChat(id.toString())
@@ -65,8 +68,8 @@ class ContactAPI implements IContact {
         const chat: Contact = base64ToObject(res)
         return chat
     }
-    async add(con: Contact): Promise<boolean> {
-        const res = await CoreModule.addContact(con._id, con.name)
+    async put(con: Contact): Promise<boolean> {
+        const res = await CoreModule.putContact(con._id, con.name)
         return res
     }
     async list(skip: number, limit: number): Promise<Contact[]> {

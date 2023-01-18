@@ -14,6 +14,7 @@ export const MessageModel = types
     chatId: types.string,
     user: types.reference(ContactModel),
     sent: types.maybe(types.boolean),
+    seen: types.maybe(types.boolean),
     received: types.maybe(types.boolean),
     pending: types.maybe(types.boolean),
     failed: types.maybe(types.boolean),

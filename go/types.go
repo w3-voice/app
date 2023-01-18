@@ -6,9 +6,12 @@ type Identity struct {
 }
 
 type Chat struct {
-	ID      string   `json:"_id"`
-	Name    string   `json:"name"`
-	Members []string `json:"members"`
+	ID          string   `json:"_id"`
+	Name        string   `json:"name"`
+	Members     []string `json:"members"`
+	Type        int      `json:"type"`
+	Unread      int      `json:"unread"`
+	LatestText  string   `json:"latestText"`
 }
 
 type Message struct {
@@ -21,6 +24,7 @@ type Message struct {
 	Received  bool   `json:"received"`
 	Pending   bool   `json:"pending"`
 	Failed    bool   `json:"failed"`
+	Seen      bool     `json:"Seen"`
 }
 
 type Contact struct {

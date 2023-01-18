@@ -1,17 +1,18 @@
-import React, { FC, useEffect } from "react"
-import { FlatList, Platform, View } from 'react-native';
-import { observer } from "mobx-react-lite"
+import React, { FC, useCallback, useEffect } from "react"
+import { FlatList, Platform, TextStyle, View } from 'react-native';
+import { Observer, observer } from "mobx-react-lite"
 import { ViewStyle } from "react-native"
 import { StackScreenProps } from "@react-navigation/stack"
 import { ChatScreenProps } from "../navigators"
 import { Screen } from "../components"
 import { useFocusEffect, useNavigation } from "@react-navigation/native"
 import { useStores } from "../models"
-import { Appbar, FAB, Menu } from 'react-native-paper';
+import { Appbar, Avatar, Badge, FAB, Menu } from 'react-native-paper';
 import { List } from 'react-native-paper';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { HeaderButtonProps } from "@react-navigation/native-stack/lib/typescript/src/types";
 import coreSync from "../models/helpers/coreSync";
+import { spacing } from "../theme";
 
 const MORE_ICON = Platform.OS === 'ios' ? 'dots-horizontal' : 'dots-vertical';
 
@@ -46,19 +47,21 @@ export const ChatListHeaderMenu = (_props: HeaderButtonProps) => {
 
 export const ChatListScreen: FC<StackScreenProps<ChatScreenProps<"ChatList">>> = observer(function ChatListScreen() {
   // Pull in one of our MST stores
-  const { chatStore } = useStores()
+  const { chatStore,messageStore } = useStores()
   // Pull in navigation via hook
   const navigation = useNavigation()
 
-  useFocusEffect(() => {
-    chatStore.loadChatList()
+
+  useFocusEffect(useCallback(()=>{
+    chatStore.load()
     const sub = coreSync(chatStore)
     return () => sub.remove()
-  });
+  },[]))
 
   const navigateItem = (id) => {
     return () => {
-      chatStore.selectChat(id)
+      // chatStore.select(id)
+      messageStore.open(id)
       navigation.navigate("Chat")
     }
   }
@@ -70,8 +73,13 @@ export const ChatListScreen: FC<StackScreenProps<ChatScreenProps<"ChatList">>> =
 
   const renderItem = ({ item }) => (
     <List.Item
+      borderless={true}
       title={item.name}
-      onPress={navigateItem(item._id)} />
+      titleStyle={$listItemTitle}
+      description={item.latestText}
+      onPress={navigateItem(item._id)}
+      left={props => <Avatar.Text style={listItem} size={50} label={item.name}/> } 
+      right={props => <Observer>{()=>item.unread>0&&<View style={$badgeContainer}><Badge>{item.unread}</Badge></View>}</Observer>} />
   )
 
   return (
@@ -121,4 +129,19 @@ const $fixedView: ViewStyle = {
   bottom: 0,
   flexDirection: 'row',
   justifyContent: 'flex-end',
+}
+
+const listItem: ViewStyle = {
+  marginLeft: spacing.small,
+  marginRight: 0,
+  paddingRight: 0,
+}
+
+const $listItemTitle: TextStyle = {
+  fontSize:18
+}
+
+const $badgeContainer: ViewStyle = {
+  display: "flex",
+  justifyContent: "center"
 }

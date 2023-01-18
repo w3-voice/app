@@ -43,7 +43,7 @@ export const ContactStoreModel = types
       self.form.saving = true;
       const newContact = { _id:self.form._id, name:self.form.name }
       try {
-        const res = yield api.beeCore.contact.add(newContact)
+        const res = yield api.beeCore.contact.put(newContact)
         if(res){
           self.contacts.put(newContact)
         }else{
