@@ -29,7 +29,7 @@ func NewBridge(repoPath string, conf *HostConfig) (*Bridge, error) {
 	m := core.NewMessengerAPI(repoPath, Option(), hb)
 
 	f := &Bridge{m}
-	sub, err := m.EventBus().Subscribe(new(event.EvtObject))
+	sub, err := m.EventBus().Subscribe([]interface{}{new(event.MessageEventObj)})
 	if err != nil {
 		panic("can not subscribe to bus")
 	}
@@ -37,8 +37,8 @@ func NewBridge(repoPath string, conf *HostConfig) (*Bridge, error) {
 		defer sub.Close()
 
 		for e := range sub.Out() {
-			evt := Event(e.(event.EvtObject))
-			getEmitter().Emit(&evt)
+			bevt,_ := BMessageEventMarshal(e.(event.MessageEventObj))
+			getEmitter().Emit(bevt)
 		}
 	}()
 
@@ -77,8 +77,8 @@ func (b *Bridge) GetIdentity() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	i := BIdentity(idn)
-	return i.Serialize()
+	
+	return Marshal(&idn)
 }
 
 func (b *Bridge) NewIdentity(name string) (string, error) {
@@ -86,8 +86,7 @@ func (b *Bridge) NewIdentity(name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	i := BIdentity(*idn)
-	return i.Serialize()
+	return Marshal(idn)
 }
 
 func (b *Bridge) GetChat(id string) (string, error) {
@@ -96,8 +95,7 @@ func (b *Bridge) GetChat(id string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	c := BChat(ch)
-	return c.Serialize()
+	return Marshal(&ch)
 }
 
 func (b *Bridge) GetChats(skip int, limit int) (string, error) {
@@ -105,8 +103,7 @@ func (b *Bridge) GetChats(skip int, limit int) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	res := BChats(ch)
-	return res.Serialize()
+	return Marshal(ch)
 }
 
 func (b *Bridge) GetMessages(chatID string, skip int, limit int) (string, error) {
@@ -115,8 +112,7 @@ func (b *Bridge) GetMessages(chatID string, skip int, limit int) (string, error)
 	if err != nil {
 		return "", err
 	}
-	res := BMessages(msgs)
-	return res.Serialize()
+	return Marshal(msgs)
 }
 
 func (b *Bridge) GetMessageNotification(msgID string) (*Notification, error) {
@@ -133,8 +129,7 @@ func (b *Bridge) GetMessage(ID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	bmsg := BMessage(msg)
-	return bmsg.Serialize()
+	return Marshal(&msg)
 }
 
 func (b *Bridge) SendMessage(chatId string, text string) (string, error) {
@@ -142,8 +137,7 @@ func (b *Bridge) SendMessage(chatId string, text string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	bmsg := BMessage(*msg)
-	return bmsg.Serialize()
+	return Marshal(msg)
 }
 
 func (b *Bridge) GetContacts(skip int, limit int) (string, error) {
@@ -151,8 +145,7 @@ func (b *Bridge) GetContacts(skip int, limit int) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	res := BContacts(cs)
-	return res.Serialize()
+	return Marshal(cs)
 }
 
 func (b *Bridge) GetContact(id string) (string, error) {
@@ -161,8 +154,7 @@ func (b *Bridge) GetContact(id string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	res := BContact(c)
-	return res.Serialize()
+	return Marshal(&c)
 }
 
 func (b *Bridge) PutContact(id string, name string) error {
@@ -179,23 +171,38 @@ func (b *Bridge) Seen(chatID string) error {
 
 func (b Bridge) NewPMChat(contactID string) (string, error) {
 	id := entity.ID(contactID)
-	pm, err := b.ChatAPI().New(core.ForPrivateChat(id))
+	con,err  := b.ContactBookAPI().Get(id)
 	if err != nil {
 		return "", err
 	}
-	res := BChat(pm)
-	return res.Serialize()
+	pm, err := b.ChatAPI().New(core.NewPrivateChat(con))
+	if err != nil {
+		return "", err
+	}
+	return Marshal(&pm)
+}
+
+func (b Bridge) NewGPChat(opt string) (string, error) {
+	var o core.NewChatOpt
+	o, err := UnMarshal[core.NewChatOpt](opt)
+	if err != nil {
+		return "", err
+	}
+	pm, err := b.ChatAPI().New(o)
+	if err != nil {
+		return "", err
+	}
+	return Marshal(&pm)
 }
 
 func (b Bridge) GetPMChat(contactID string) (string, error) {
 	id := entity.ID(contactID)
-	pm, err := b.ChatAPI().Find(core.ForPrivateChat(id))
+	pm, err := b.ChatAPI().Find(core.WithPrivateChatContact(id))
 	if err != nil {
 		return "", err
 	}
 	if len(pm) == 0 {
 		return "", errors.New("not found")
 	}
-	res := BChat(pm[0])
-	return res.Serialize()
+	return Marshal(&pm)
 }

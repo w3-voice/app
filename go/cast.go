@@ -1,131 +1,44 @@
 package bridge
 
 import (
-	"encoding/base64"
 	"encoding/json"
+	"errors"
 
 	"github.com/hood-chat/core/entity"
+	"github.com/hood-chat/core/event"
 )
 
-type BridgeSerializer interface {
-	Serialize() (string, error)
-}
-type BridgeCast[C any] interface {
-	cast() C
-}
-
-type BMessage entity.Message
-
-func (m *BMessage) Serialize() (string, error) {
-	return Marshal(m.cast())
-}
-
-func (m *BMessage) cast() Message {
-	return Message{
-		ID:        m.ID.String(),
-		Text:      m.Text,
-		ChatID:    string(m.ChatID),
-		CreatedAt: m.CreatedAt * 1000,
-		ContactID: m.Author.ID.String(),
-		Sent:      m.Status == entity.Sent,
-		Seen:      m.Status == entity.Seen,
-		Received:  m.Status == entity.Received,
-		Pending:   m.Status == entity.Pending,
-		Failed:    m.Status == entity.Failed,
+func BMessageEventMarshal(evt event.MessageEvent) (*Event, error) {
+	var payload string
+	switch p := evt.GetPayload().(type) {
+	case entity.ID:
+		payload = p.String()
+	case entity.Message:
+		m, err := p.Json()
+		if err != nil {
+			return NewEvent("","","",""), err
+		}
+		payload = string(m)
+	default:
+		return NewEvent("","","",""), errors.New("no error")
 	}
+	return NewEvent(evt.GetName(), event.MessageGroup, event.MessagingEG.Actions[evt.GetAction()], payload), nil
 }
 
-type BMessages []entity.Message
-
-func (m BMessages) Serialize() (string, error) {
-	res := make([]Message, 0)
-	for _, msg := range m {
-		m := BMessage(msg)
-		res = append(res, m.cast())
-	}
-	return Marshal(res)
-}
-
-type BContact entity.Contact
-
-func (m *BContact) Serialize() (string, error) {
-	return Marshal(m.cast())
-}
-
-func (m *BContact) cast() Contact {
-	return Contact{m.ID.String(), m.Name}
-}
-
-type BContacts []entity.Contact
-
-func (m BContacts) Serialize() (string, error) {
-	res := make([]Contact, 0)
-	for _, msg := range m {
-		m := BContact(msg)
-		res = append(res, m.cast())
-	}
-	return Marshal(res)
-}
-
-type BChat entity.ChatInfo
-
-func (m *BChat) Serialize() (string, error) {
-	return Marshal(m.cast())
-}
-
-func (m *BChat) cast() Chat {
-	mids := []string{}
-	for _, m := range m.Members {
-		mids = append(mids, m.ID.String())
-	}
-	return Chat{
-		ID:      m.ID.String(),
-		Name:    m.Name,
-		Members: mids,
-		Type:    int(m.Type),
-		LatestText: m.LatestText,
-		Unread: int(m.Unread),
-	}
-}
-
-type BChats []entity.ChatInfo
-
-func (m BChats) Serialize() (string, error) {
-	res := make([]Chat, 0)
-	for _, msg := range m {
-		m := BChat(msg)
-		res = append(res, m.cast())
-	}
-	return Marshal(res)
-}
-
-type BIdentity entity.Identity
-
-func (m *BIdentity) Serialize() (string, error) {
-	return Marshal(m.cast())
-}
-
-func (m *BIdentity) cast() Identity {
-	return Identity{m.ID.String(), m.Name}
-}
-
-
-// type BSlice[C any] []BridgeCast[C]
-
-// func (m *BSlice[C]) Serialize() (string, error) {
-// 	res := make([]C, 0)
-// 	for _, msg := range *m {
-// 		res = append(res, msg.cast())
-// 	}
-// 	return Marshal(res)
-// 	return "", nil
-// }
-
-func Marshal(v any) (string, error) {
-	bytes, err := json.Marshal(v)
+func Marshal[e entity.JsonMessage](v e) (string, error) {
+	bytes, err := v.Json()
 	if err != nil {
 		return "", err
 	}
-	return base64.StdEncoding.EncodeToString(bytes), nil
+	return string(bytes), nil
+}
 
+func UnMarshal[e any](j string) (e, error) {
+	b := []byte(j)
+	i := new(e)
+	err := json.Unmarshal(b, i)
+	if err != nil {
+		return *i, err
+	}
+	return *i, nil
 }
