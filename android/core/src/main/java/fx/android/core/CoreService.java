@@ -61,7 +61,7 @@ public class CoreService extends Service {
         try {
             Log.i(TAG, ": notification called");
             switch (event.action) {
-                case "received":
+                case "Received":
                     showMessageNotification(event.payload);
                     break;
                 // Todo: I still don't know what to do with action.

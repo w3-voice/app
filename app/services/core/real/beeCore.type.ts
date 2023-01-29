@@ -8,7 +8,7 @@ export interface BeeCoreInstance {
   messages: IMessages
   permissions: IPermissions
   bindService(): Promise<boolean>
-  subscribe(callback: (event: any) => void): EmitterSubscription
+  subscribe(callback: Callback,filter: Filter): EmitterSubscription
   unsubscribe(): void
 }
 
@@ -66,8 +66,9 @@ export interface Contact {
 export interface Chat {
   _id: ID,
   name: string,
-  members: ID[]
-  type:    number,
+  members: Contact[]
+  admins:  Contact[]
+  type:    ChatType,
   unread:  number,
   latestText: string
 }
@@ -77,11 +78,13 @@ export interface Message {
   text: string,
   chatId: string,
   createdAt: Date | number
-  user: ID,
-  sent?: boolean,
-  received?: boolean,
-  pending?: boolean,
-  failed?: boolean,
+  user: Contact,
+  status: MessageStatus,
+  chatType: ChatType,
+  // sent?: boolean,
+  // received?: boolean,
+  // pending?: boolean,
+  // failed?: boolean,
 }
 
 export interface Event {
@@ -91,9 +94,33 @@ export interface Event {
   payload: string
 }
 
+export interface EventConstraint {
+  name: string[],
+  action: string[],
+  group: string[],
+}
+
+
 export interface PermissionStatus {
+  optimization: boolean
   supported: boolean
   autostart: boolean
   powersave: boolean
   isAsked:   boolean
 }
+
+export enum ChatType {
+  Private,
+  Group
+}
+
+export enum MessageStatus {
+	Pending,
+	Sent,
+	Seen,
+	Received,
+	Failed,
+}
+
+export type Callback = (event: Event)=>void
+export type Filter = (event: Event)=>boolean

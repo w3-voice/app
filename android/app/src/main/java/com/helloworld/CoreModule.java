@@ -94,14 +94,22 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
                 .emit(eventName, params);
     }
 
+    private int listenerCount = 0;
     @ReactMethod
     public void addListener(String eventName) {
-        // Set up any upstream listeners or background tasks as necessary
+        if (listenerCount == 0) {
+            mHandler = new EventRelay();
+            mHandler.Init(this);
+        }
+        listenerCount += 1;
     }
 
     @ReactMethod
     public void removeListeners(Integer count) {
-        // Remove upstream listeners, stop unnecessary background tasks
+        listenerCount -= count;
+        if (listenerCount == 0) {
+            mHandler = null;
+        }
     }
 
     @ReactMethod
@@ -113,7 +121,6 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
         if (callBack != null) {
             return;
         }
-        mHandler = new EventRelay(this);
         startService();
         bindRequest();
         callBack = cb;

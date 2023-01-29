@@ -1,6 +1,7 @@
 package bridge
 
 import (
+	"encoding/json"
 	"errors"
 	"strings"
 
@@ -115,12 +116,13 @@ func (b *Bridge) GetMessages(chatID string, skip int, limit int) (string, error)
 	return Marshal(msgs)
 }
 
-func (b *Bridge) GetMessageNotification(msgID string) (*Notification, error) {
-	msg, err := b.ChatAPI().Message(entity.ID(msgID))
+func (b *Bridge) GetMessageNotification(msg string) (*Notification, error) {
+	m := new(entity.Message)
+	err := json.Unmarshal([]byte(msg), m)
 	if err != nil {
 		return nil, err
 	}
-	return NewNotification(msg.Author.Name, msg.Text), nil
+	return NewNotification(m.Author.Name, m.Text), nil
 }
 
 func (b *Bridge) GetMessage(ID string) (string, error) {

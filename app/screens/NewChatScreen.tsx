@@ -12,65 +12,65 @@ import { List } from 'react-native-paper';
 
 
 export const NewChatScreen: FC<StackScreenProps<ChatScreenProps<"NewChat">>> = observer(function NewChatScreen() {
- // Pull in one of our MST stores
- const { chatStore: { openPMChat}, contactStore:{list, load, form: {done, _id, reset}} } = useStores()
- useEffect(()=>{
-  load()
- },[])
- useEffect(()=>{
-  if(!!done){
-    console.log("done caled")
-    openPMChat(_id).then(()=>{
-      navigation.navigate("Chat")
-      reset()
-    }).catch((e)=>{
-      console.log("open failed")
-    })
+  // Pull in one of our MST stores
+  const { chatStore: { openPMChat }, contactStore: { list, load, form: { done, _id, reset } } } = useStores()
+  useEffect(() => {
+    load()
+  }, [])
+  useEffect(() => {
+    if (!!done) {
+      console.log("done caled")
+      openPMChat(_id).then(() => {
+        navigation.navigate("Chat")
+        reset()
+      }).catch((e) => {
+        console.log("open failed")
+      })
+    }
+  }, [done])
+  const navigation = useNavigation()
+  const navigateItem = (id) => {
+    return () => {
+      openPMChat(id).then(() => {
+        navigation.navigate("Chat")
+      }).catch((e) => {
+        console.log("open failed")
+      })
+    }
   }
- },[done])
- const navigation = useNavigation()
- const navigateItem = (id) => {
-  return () => {
-    openPMChat(id).then(()=>{
-      navigation.navigate("Chat")
-    }).catch((e)=>{
-      console.log("open failed")
-    })
+
+  const newContact = () => {
+    navigation.navigate("NewContact")
   }
-}
 
-const newContact = () => {
-  navigation.navigate("NewContact")
-}
+  const renderItem = ({ item }) => (
+    <List.Item
+      title={item.name}
+      onPress={navigateItem(item._id)} />
+  )
 
-const renderItem = ({ item }) => (
-  <List.Item
-    title={item.name}
-    onPress={navigateItem(item._id)} />
-)
-
- return (
-   <>
-     <Screen
-       style={$root}
-       preset="fixed"
-       contentContainerStyle={$screenContentContainer}
-     >
-       <FlatList
-         data={list}
-         renderItem={renderItem}
-         keyExtractor={item => item._id}
-       />
-     </Screen>
-     <View style={$fixedView}>
+  return (
+    <>
+      <Screen
+        style={$root}
+        preset="fixed"
+        contentContainerStyle={$screenContentContainer}
+      >
+        <FlatList
+          data={list}
+          renderItem={renderItem}
+          keyExtractor={item => item._id}
+        />
+      </Screen>
+      <View style={$fixedView}>
         <FAB
           icon="account-plus"
           style={$fab}
           onPress={newContact}
         />
       </View>
-   </>
- )
+    </>
+  )
 })
 
 const $root: ViewStyle = {

@@ -9,7 +9,8 @@ export const ChatModel = types
   .props({
     _id: types.identifier,
     name: types.string,
-    members: types.array(types.reference(ContactModel)),
+    members: types.array(ContactModel),
+    admins: types.array(ContactModel),
     type:    types.integer,
     unread:  types.integer,
     latestText: types.string

@@ -13,6 +13,7 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import { HeaderButtonProps } from "@react-navigation/native-stack/lib/typescript/src/types";
 import coreSync from "../models/helpers/coreSync";
 import { spacing } from "../theme";
+import { NewMessageFilter } from "../services/core/real/const";
 
 const MORE_ICON = Platform.OS === 'ios' ? 'dots-horizontal' : 'dots-vertical';
 
@@ -54,7 +55,7 @@ export const ChatListScreen: FC<StackScreenProps<ChatScreenProps<"ChatList">>> =
 
   useFocusEffect(useCallback(()=>{
     chatStore.load()
-    const sub = coreSync(chatStore)
+    const sub = coreSync(chatStore,"onNewMessage", NewMessageFilter)
     return () => sub.remove()
   },[]))
 

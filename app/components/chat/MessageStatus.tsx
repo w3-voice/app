@@ -8,7 +8,7 @@ interface Props {
 }
 export const MessageStatus: FC<Props>= observer((props: Props) => {
     const { messageStore: { messages } } = useStores()
-    const msg = messages.get(props.id)
+    const msg = messages.get(props.id).gMessage
     return(         
     <View style={$tickView}>
         {!!msg.sent && (

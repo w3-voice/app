@@ -1,8 +1,8 @@
 import { flow, Instance, SnapshotIn, SnapshotOut, types } from "mobx-state-tree"
 import { api } from "../services/core"
 import { Message, MessageModel } from "./Message"
-import { getRootStore } from "./helpers/getRootStore"
 import { getUnixTime } from "date-fns"
+import { ChatType, MessageStatus, parse } from "../services/core/real"
 
 const PAGINATION_SIZE = 20
 const REFRESH_SIZE = 5
@@ -25,20 +25,16 @@ export const MessageStoreModel = types
   })) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions((self) => {
     const onFocus = flow(function* onFocus() {
-      if(self.block+1000< getUnixTime(new Date())){
-        refresh()
-        self.block=getUnixTime(new Date())
-      } 
-      // check chat is selected
+      refresh()
       api.beeCore.chat.seen(self.chatId)
     })
     const open = flow(function* open(chatId) {
-      if(self.chatId !== chatId){
+      if (self.chatId !== chatId) {
         self.chatId = chatId
         self.block = getUnixTime(new Date())
         clear()
         load()
-      } 
+      }
     })
     const refresh = flow(function* refresh() {
       let skip = 0
@@ -61,8 +57,10 @@ export const MessageStoreModel = types
         _id: msg._id,
         chatId: "",
         createdAt: msg.createdAt,
-        user: msg.user._id,
-        text: msg.text
+        user: { _id: msg.user._id, name: msg.user.name },
+        text: msg.text,
+        status: MessageStatus.Pending,
+        chatType: ChatType.Private
       })
       self.messages.put(rmsg)
     })
@@ -74,26 +72,25 @@ export const MessageStoreModel = types
       //Todo: to much if and else need to clean it up 
       console.log("update message called with ", id, action)
       // New Received Message
-      switch (action) {
-        case "received":
-          let rmsg: Message = yield api.beeCore.messages.get(id)
-          // Chat if chat open put message
-          if (self.chatId && self.chatId === rmsg.chatId) {
-            self.messages.put(rmsg)
-          }
-          break;
-        case "sent":
+      for (const status in MessageStatus) {
+        let t = MessageStatus[status as keyof typeof MessageStatus]
+        console.log(status, t)
+        if(status===action){
           let smsg = self.messages.get(id)
-          if (self.chatId && smsg && self.chatId === smsg.chatId) {
-            smsg.onSent()
-          }
-          break;
-        case "failed":
-          let nmsg = self.messages.get(id)
-          if (self.chatId && nmsg && self.chatId === nmsg.chatId) {
-            nmsg.onFailed()
-          }
-          break;
+          if (self.chatId && smsg && self.chatId === smsg.chatId)
+            smsg.onStatusChange(t)
+            return
+        }
+      }
+    })
+    const onNewMessage = flow(function* onNewMessage(jsonMsg: string, action: string) {
+      //Todo: to much if and else need to clean it up 
+      let rmsg: Message = parse<Message>(jsonMsg)
+      console.log("update message called with ", rmsg._id, action)
+      // New Received Message
+      // Chat if chat open put message
+      if (self.chatId && self.chatId === rmsg.chatId) {
+        self.messages.put(rmsg)
       }
     })
     return {
@@ -103,7 +100,8 @@ export const MessageStoreModel = types
       send,
       clear,
       open,
-      onMessageChange
+      onMessageChange,
+      onNewMessage
     }
   }) // eslint-disable-line @typescript-eslint/no-unused-vars
 

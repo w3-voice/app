@@ -11,7 +11,10 @@ import {
     IPrivateChat,
     Message,
     IPermissions,
-    PermissionStatus
+    PermissionStatus,
+    Filter,
+    Callback,
+    Event
 } from "./beeCore.type";
 import { EmitterSubscription, NativeEventEmitter, NativeModules } from 'react-native';
 const { CoreModule, PermissionsModule } = NativeModules;
@@ -25,17 +28,17 @@ class ChatAPI implements IChat {
 
     async get(id: ID): Promise<Chat> {
         const res = await CoreModule.getChat(id.toString())
-        const chat: Chat = base64ToObject(res)
+        const chat: Chat = parse<Chat>(res)
         return chat
     }
     async list(skip: number, limit: number): Promise<Chat[]> {
         const res = await CoreModule.getChats(skip, limit)
-        const chat: Chat[] = base64ToObject(res)
+        const chat: Chat[] = parse<Chat[]>(res)
         return chat
     }
     async send(id: string, msg: Message): Promise<Message> {
         const res = await CoreModule.sendMessage(id, msg.text)
-        const ms: Message = base64ToObject(res)
+        const ms: Message = parse<Message>(res)
         return ms
     }
 
@@ -45,17 +48,17 @@ class PrivateChatAPI implements IPrivateChat {
 
     async add(contactID: ID): Promise<Chat> {
         const res = await CoreModule.newPMChat(contactID)
-        const newChat: Chat = base64ToObject(res)
+        const newChat: Chat = parse<Chat>(res)
         return newChat
     }
     async get(contactID: ID): Promise<Chat> {
         const res = await CoreModule.getPMChat(contactID)
-        const newChat: Chat = base64ToObject(res)
+        const newChat: Chat = parse<Chat>(res)
         return newChat
     }
     async open(contactID: ID): Promise<Chat> {
         const res = await CoreModule.openPMChat(contactID)
-        const chat: Chat = base64ToObject(res)
+        const chat: Chat = parse<Chat>(res)
         return chat
     }
 
@@ -65,7 +68,7 @@ class ContactAPI implements IContact {
 
     async get(id: ID): Promise<Contact> {
         const res = await CoreModule.getContact(id.toString())
-        const chat: Contact = base64ToObject(res)
+        const chat: Contact = parse<Contact>(res)
         return chat
     }
     async put(con: Contact): Promise<boolean> {
@@ -74,7 +77,7 @@ class ContactAPI implements IContact {
     }
     async list(skip: number, limit: number): Promise<Contact[]> {
         const res = await CoreModule.getContacts(skip, limit)
-        const con: Contact[] = base64ToObject(res)
+        const con: Contact[] = parse<Contact[]>(res)
         return con
     }
 
@@ -83,7 +86,7 @@ class ContactAPI implements IContact {
 class IdentityAPI implements IIdentity {
     async get(): Promise<Identity> {
         const res = await CoreModule.getIdentity()
-        const id: Identity = base64ToObject(res)
+        const id: Identity = parse<Identity>(res)
         return id
     }
     has(): Promise<boolean> {
@@ -91,7 +94,7 @@ class IdentityAPI implements IIdentity {
     }
     async create(name: string): Promise<Identity> {
         const res = await CoreModule.newIdentity(name)
-        const id: Identity = base64ToObject(res)
+        const id: Identity = parse<Identity>(res)
         return id
     }
 
@@ -100,12 +103,12 @@ class IdentityAPI implements IIdentity {
 class MessageAPI implements IMessages {
     async get(id: string) {
         const res = await CoreModule.getMessage(id)
-        const msg: Message = base64ToObject(res)
+        const msg: Message = parse<Message>(res)
         return msg
     }
     async list(chatID: string, skip: number, limit: number): Promise<Message[]> {
         const res = await CoreModule.getMessages(chatID, skip, limit)
-        const msgs: Message[] = base64ToObject(res)
+        const msgs: Message[] = parse<Message[]>(res)
         return msgs
     }
 
@@ -126,6 +129,9 @@ class PermissionsAPI implements IPermissions {
     }
     requestEnableAutoStart(): void {
         PermissionsModule.doActionAutoStart()
+    }
+    openAppBatteryOptimization(): void {
+        PermissionsModule.openAppBatteryOptimization()
     }
 
 }
@@ -166,8 +172,9 @@ class RNBeeCore implements BeeCoreInstance {
         })
     }
 
-    subscribe(callback: (event: any) => void): EmitterSubscription{
-        let subscription = this.nativeEmitter.addListener('CoreEvents', callback);
+    subscribe(callback: Callback,filter: Filter): EmitterSubscription{
+        const subCB = BuildEventCallBack(callback, filter)
+        let subscription = this.nativeEmitter.addListener('CoreEvents', subCB);
         console.log("subscribed")
         return subscription
     }
@@ -179,8 +186,16 @@ class RNBeeCore implements BeeCoreInstance {
 
 }
 
-export const base64ToObject = <T>(msg: string): T => {
-    let obj = JSON.parse(Buffer.from(msg, 'base64').toString());
+function BuildEventCallBack(cb: Callback,filter: Filter ){
+    return (evt: Event)=>{
+        if (filter(evt)) {
+            cb(evt)
+        }
+    }
+}
+
+export const parse = <T>(msg: string): T => {
+    let obj = JSON.parse(msg);
     return obj;
 };
 
