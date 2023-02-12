@@ -4,18 +4,18 @@ import {
     onPatch,
     applyPatch,
     onAction,
-    applyAction
+    applyAction,
+    IAnyStateTreeNode
 } from "mobx-state-tree"
 import { EmitterSubscription } from "react-native"
 import { api } from "../../services/core"
+import { Filter } from "../../services/core/real"
 
 
-export default function coreSync(store) {
+export default function subScribeStore(store: IAnyStateTreeNode, action: string, filter: Filter) {
     let subscription: EmitterSubscription
     onEvent((event) => {
-        if(event.name == "ChangeMessageStatus" && event.group == "Messaging"){
-            applyAction(store, {name:"onMessageChange",args:[event.payload,event.action]})
-        } 
+        applyAction(store, {name:action,args:[event.payload,event.action]})
     })
 
     let isHandlingMessage = false
@@ -25,8 +25,10 @@ export default function coreSync(store) {
             isHandlingMessage = true
             handler(event)
             isHandlingMessage = false
-        })
+        }, filter)
     }
 
     return subscription
 }
+
+

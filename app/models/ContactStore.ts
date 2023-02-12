@@ -10,7 +10,7 @@ export const ContactStoreModel = types
   .props({
     contacts: types.map(ContactModel),
     form: createNewContactDefaultModel(),
-    hasMore: types.maybe(types.boolean)
+    hasMore: types.maybe(types.boolean),
   })
   .views((self) => ({
     get list() {

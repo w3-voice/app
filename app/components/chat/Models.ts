@@ -1,6 +1,6 @@
 import { StyleProp, ViewStyle } from 'react-native'
 import { LightboxProps } from 'react-native-lightbox-v2'
-import { Message as _IMessage } from '../../models'
+import { Contact, GiftedMessage } from '../../models'
 
 export { ActionsProps } from 'react-native-gifted-chat/lib/Actions'
 export { AvatarProps } from 'react-native-gifted-chat/lib/Avatar'
@@ -50,7 +50,7 @@ export interface QuickReplies {
   keepIt?: boolean
 }
 
-export type IMessage = _IMessage
+export type IMessage = GiftedMessage
 
 export type IChatMessage = IMessage
 

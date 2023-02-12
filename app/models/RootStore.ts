@@ -4,6 +4,7 @@ import { createChatListDefaultModel } from "./ChatStore"
 import { createIdentityDefaultModel } from "./Identity"
 import { createPermissionsDefaultModel } from "./Permissions"
 import { createMessageStoreDefaultModel } from "./MessageStore"
+import { createNewGroupDefaultModel } from "./NewGroup"
 
 /**
  * A RootStore model.
@@ -14,6 +15,7 @@ export const RootStoreModel = types.model("RootStore").props({
   chatStore: createChatListDefaultModel(),
   permissionStore: createPermissionsDefaultModel(),
   messageStore: createMessageStoreDefaultModel(),
+  newGroup: createNewGroupDefaultModel()
 })
 
 /**

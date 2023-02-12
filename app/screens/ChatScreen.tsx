@@ -6,6 +6,7 @@ import { GiftedChat } from '../components/chat/GiftedChat'
 import { useStores } from "../models"
 import coreSync from "../models/helpers/coreSync"
 import { useFocusEffect, useNavigation } from "@react-navigation/native"
+import {MessageStatusFilter, NewMessageFilter} from "../services/core/real/const"
 
 
 
@@ -18,8 +19,9 @@ export const ChatScreen: FC<StackScreenProps<ChatScreenProps<"ChatList">>> = obs
     if(chatId){
       onFocus()
       console.log("onFocus")
-      const sub = coreSync(rootStore.messageStore)
-      return () => sub.remove()
+      const sub = coreSync(rootStore.messageStore,"onMessageChange", MessageStatusFilter)
+      const sub2 = coreSync(rootStore.messageStore,"onNewMessage", NewMessageFilter)
+      return () => {sub.remove();sub2.remove()}
     } else {
       navigation.navigate("ChatList")
     }

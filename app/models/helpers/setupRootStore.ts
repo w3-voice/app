@@ -27,21 +27,26 @@ let _disposer: IDisposer
 let _subscribed = false
 export async function setupRootStore(rootStore: RootStore) {
   let restoredState: any
-
+  console.log("setup root store")
   try {
+    
     if (!_subscribed){
+      console.log("bond")
       const bonded = await api.beeCore.bindService()
+      console.log("as")
       await rootStore.identityStore.loadIdentity()
       await rootStore.permissionStore.load()
       _subscribed = true;
     }
    
-    
+    console.log("setup done")
     
   } catch (e) {
     // if there's any problems loading, then inform the dev what happened
+    console.log("setup failed", e)
     if (__DEV__) {
       console.tron.error(e.message, null)
+      
     }
   }
   // rootStore.chatStore.clear()

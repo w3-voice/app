@@ -54,6 +54,10 @@ interface ICoreService {
     */
     String newPMChat(String contactID);
     /**
+    * create a new Private Chat with id of contact and ChatID
+    */
+    byte[] newGPChat(in byte[] parms);
+    /**
     * retrun a Private chat by its contactID
     */
     String getPMChat(String contactID);

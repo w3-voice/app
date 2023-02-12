@@ -3,6 +3,7 @@ import { ChatModel } from "./Chat"
 import { api } from "../services/core"
 import { Message, MessageModel } from "./Message"
 import { getRootStore } from "./helpers/getRootStore"
+import { parse } from "../services/core/real/beeCore"
 
 /**
  * Model description here for TypeScript hints.
@@ -19,14 +20,14 @@ export const ChatStoreModel = types
     }
   })) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions((self) => {
+    const add = (c)=>{
+      self.chats.put(c)
+    }
     const openPMChat = flow(function* openChat(contactId: string) {
       // get or create a chat
       const chat = yield api.beeCore.pchat.open(contactId)
       //loading contacts
       if (!self.chats.has(chat._id)) {
-        const root = getRootStore(self)
-        let cons = chat.members.filter((i)=>i !== root.identityStore.user._id)
-        root.contactStore.load(cons)
         // add chat
         self.chats.put(chat)
         
@@ -35,9 +36,6 @@ export const ChatStoreModel = types
     })
     const load = flow(function* loadChatList() {
       const list = yield api.beeCore.chat.list(0, 0)
-      const root = getRootStore(self)
-      const members = list.flatMap(item => item.members).filter((i)=>i !== root.identityStore.user._id)
-      root.contactStore.load(members)
       list.forEach(chat => {
         self.chats.put(chat)
       });
@@ -51,26 +49,19 @@ export const ChatStoreModel = types
     const clear = () => {
       self.selected = null
     }
-    const onMessageChange = flow(function* onMessageChange(id: string, action: string) {
+    const onNewMessage = flow(function* onNewMessage(jsonMsg: string, action: string) {
       //Todo: to much if and else need to clean it up 
-      console.log("update message called with ", id, action)
-      // New Received Message
-      switch (action) {
-        case "received":
-          let rmsg: Message = yield api.beeCore.messages.get(id)
-          // Add chat to list if not exist
-          if (!self.chats.has(rmsg.chatId)) {
-            const root = getRootStore(self)
-            let newCH = yield api.beeCore.chat.get(rmsg.chatId)
-            root.contactStore.load(newCH.members)
-            self.chats.put(newCH);
-          } else {
-            const chat = self.chats.get(rmsg.chatId)
-            chat.latestText = rmsg.text
-            chat.unread += 1
+      let rmsg: Message = parse<Message>(jsonMsg)
+      console.log("update message called with ", rmsg._id, action)
+      if (!self.chats.has(rmsg.chatId)) {
+        const root = getRootStore(self)
+        let newCH = yield api.beeCore.chat.get(rmsg.chatId)
+        self.chats.put(newCH);
+      } else {
+        const chat = self.chats.get(rmsg.chatId)
+        chat.latestText = rmsg.text
+        chat.unread += 1
 
-          }
-          break;
       }
     })
     return {
@@ -78,7 +69,8 @@ export const ChatStoreModel = types
       select,
       load,
       clear,
-      onMessageChange
+      onNewMessage,
+      add
     }
   }) // eslint-disable-line @typescript-eslint/no-unused-vars
 

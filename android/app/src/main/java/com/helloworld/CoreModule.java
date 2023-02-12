@@ -22,10 +22,12 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.bridge.WritableMap;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 import fx.android.core.ICoreService;
@@ -94,14 +96,22 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
                 .emit(eventName, params);
     }
 
+    private int listenerCount = 0;
     @ReactMethod
     public void addListener(String eventName) {
-        // Set up any upstream listeners or background tasks as necessary
+        if (listenerCount == 0) {
+            mHandler = new EventRelay();
+            mHandler.Init(this);
+        }
+        listenerCount += 1;
     }
 
     @ReactMethod
     public void removeListeners(Integer count) {
-        // Remove upstream listeners, stop unnecessary background tasks
+        listenerCount -= count;
+        if (listenerCount == 0) {
+            mHandler = null;
+        }
     }
 
     @ReactMethod
@@ -113,7 +123,6 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
         if (callBack != null) {
             return;
         }
-        mHandler = new EventRelay(this);
         startService();
         bindRequest();
         callBack = cb;
@@ -144,6 +153,27 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
                         promise.reject(new Error("failed to create"));
                     } else {
                         promise.resolve(res);
+                    }
+                } catch (Exception e) {
+                    promise.reject(e);
+                }
+            }
+        }).start();
+    }
+
+    @ReactMethod
+    public void newGPChat(String params, Promise promise) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Log.d(CoreModule.NAME, params);
+                    byte[] bytes = params.getBytes(StandardCharsets.UTF_8);
+                    byte[] res = cService.newGPChat(bytes);
+                    if (res == null) {
+                        promise.reject(new Error("failed to create"));
+                    } else {
+                        promise.resolve(new String(res, StandardCharsets.UTF_8));
                     }
                 } catch (Exception e) {
                     promise.reject(e);

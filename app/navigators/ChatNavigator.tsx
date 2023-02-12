@@ -5,7 +5,9 @@ import {
   ChatListScreen,
   ChatScreen,
   ChatListHeaderMenu,
-  NewContactScreenHeaderRight
+  NewContactScreenHeaderRight,
+  NewGroupMembersScreen,
+  NewGroupNameScreen
 } from "../screens"
 import {
   PaperHeader
@@ -28,12 +30,14 @@ export type ChatNavigatorParamList = {
   ScanNewContact: undefined,
   QRCodeScanner: undefined
   QRCodeModal: undefined
+  NewGroupName: undefined,
+  NewGroupMembers: undefined
 }
 const Stack = createStackNavigator<ChatNavigatorParamList>()
 export const ChatNavigator = () => {
   return (
     <Stack.Navigator screenOptions={{
-      cardStyle: { backgroundColor: "transparent" },
+      cardStyle: { backgroundColor: "white" },
       
     }}>
       <Stack.Group screenOptions={{
@@ -52,6 +56,7 @@ export const ChatNavigator = () => {
           component={NewContactScreen}
           options={{ title: 'New Contact', headerRight:NewContactScreenHeaderRight }}
          />
+
         <Stack.Screen name="ScanNewContact"
          component={QRCodeScannerScreen} 
          options={{ title: 'Scan Contact' }}
@@ -60,7 +65,18 @@ export const ChatNavigator = () => {
       <Stack.Group screenOptions={{ presentation: 'modal',headerShown: false }}>
         <Stack.Screen name="QRCodeModal" component={QRCodeModalScreen} />
       </Stack.Group>
-
+      <Stack.Group screenOptions={{
+        headerShown: true,
+        header: (props) => <PaperHeader {...props} /> }}>
+        <Stack.Screen name="NewGroupMembers"
+          component={NewGroupMembersScreen}
+          options={{ title: 'New Group' }}
+         />
+        <Stack.Screen name="NewGroupName"
+          component={NewGroupNameScreen}
+          options={{ title: 'New Group' }}
+         />
+      </Stack.Group>
     </Stack.Navigator>
   )
 }
