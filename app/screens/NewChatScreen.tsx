@@ -2,11 +2,9 @@ import React, { FC, useEffect } from "react"
 import { observer } from "mobx-react-lite"
 import { FlatList, View, ViewStyle } from "react-native"
 import { StackScreenProps } from "@react-navigation/stack"
-import { AppStackScreenProps, ChatScreenProps } from "../navigators"
-import { ListItem, Screen, Text, Button } from "../components"
+import { ChatScreenProps } from "../navigators"
 import { useNavigation } from "@react-navigation/native"
 import { useStores } from "../models"
-import { spacing } from "../theme"
 import { FAB } from 'react-native-paper';
 import { List } from 'react-native-paper';
 
@@ -24,7 +22,7 @@ export const NewChatScreen: FC<StackScreenProps<ChatScreenProps<"NewChat">>> = o
         navigation.navigate("Chat")
         reset()
       }).catch((e) => {
-        console.log("open failed")
+        console.log("open failed",e)
       })
     }
   }, [done])
@@ -34,7 +32,7 @@ export const NewChatScreen: FC<StackScreenProps<ChatScreenProps<"NewChat">>> = o
       openPMChat(id).then(() => {
         navigation.navigate("Chat")
       }).catch((e) => {
-        console.log("open failed")
+        console.log("open failed",e)
       })
     }
   }
@@ -51,17 +49,24 @@ export const NewChatScreen: FC<StackScreenProps<ChatScreenProps<"NewChat">>> = o
 
   return (
     <>
-      <Screen
-        style={$root}
-        preset="fixed"
-        contentContainerStyle={$screenContentContainer}
-      >
+
+      <List.Section>
+        <List.Item
+          style={$listItem}
+          title="New Group"
+          left={() => <List.Icon icon="account-multiple" />}
+          onPress={()=>{navigation.navigate("NewGroupMembers")}}
+        />
+        <List.Subheader>contacts</List.Subheader>
         <FlatList
           data={list}
           renderItem={renderItem}
           keyExtractor={item => item._id}
         />
-      </Screen>
+      </List.Section>
+
+
+
       <View style={$fixedView}>
         <FAB
           icon="account-plus"
@@ -73,25 +78,19 @@ export const NewChatScreen: FC<StackScreenProps<ChatScreenProps<"NewChat">>> = o
   )
 })
 
-const $root: ViewStyle = {
-  flex: 1,
-  height: 100
-}
 
 const $fab: ViewStyle = {
   margin: 40,
   right: 0,
   bottom: 0,
 }
-const $screenContentContainer: ViewStyle = {
-  paddingVertical: 0,
-  paddingHorizontal: 0,
+const $listItem: ViewStyle = {
+  paddingVertical: 3,
+  paddingHorizontal: 10,
 }
 
 const $fixedView: ViewStyle = {
   position: 'absolute',
   right: 0,
   bottom: 0,
-  flexDirection: 'row',
-  justifyContent: 'flex-end',
 }

@@ -20,6 +20,9 @@ export const ChatStoreModel = types
     }
   })) // eslint-disable-line @typescript-eslint/no-unused-vars
   .actions((self) => {
+    const add = (c)=>{
+      self.chats.put(c)
+    }
     const openPMChat = flow(function* openChat(contactId: string) {
       // get or create a chat
       const chat = yield api.beeCore.pchat.open(contactId)
@@ -66,7 +69,8 @@ export const ChatStoreModel = types
       select,
       load,
       clear,
-      onNewMessage
+      onNewMessage,
+      add
     }
   }) // eslint-disable-line @typescript-eslint/no-unused-vars
 

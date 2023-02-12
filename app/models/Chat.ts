@@ -10,7 +10,7 @@ export const ChatModel = types
     _id: types.identifier,
     name: types.string,
     members: types.array(ContactModel),
-    admins: types.array(ContactModel),
+    admins: types.maybeNull(types.array(ContactModel)),
     type:    types.integer,
     unread:  types.integer,
     latestText: types.string

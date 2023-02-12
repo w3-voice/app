@@ -13,6 +13,7 @@ export interface BeeCoreInstance {
 }
 
 export interface IChat {
+  create(opt: NewChatOpt): Promise<Chat>
   get(id: ID): Promise<Chat>
   list(skip: number, limit: number):  Promise<Chat[]>
   send(id: ID, msg: Message): Promise<Message>
@@ -124,3 +125,9 @@ export enum MessageStatus {
 
 export type Callback = (event: Event)=>void
 export type Filter = (event: Event)=>boolean
+
+export interface NewChatOpt {
+  name: string,
+  type: ChatType,
+  members: Contact[]
+}

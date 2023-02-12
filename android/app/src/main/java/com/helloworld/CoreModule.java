@@ -22,10 +22,12 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.bridge.WritableMap;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 import fx.android.core.ICoreService;
@@ -151,6 +153,27 @@ public class CoreModule extends ReactContextBaseJavaModule implements LifecycleE
                         promise.reject(new Error("failed to create"));
                     } else {
                         promise.resolve(res);
+                    }
+                } catch (Exception e) {
+                    promise.reject(e);
+                }
+            }
+        }).start();
+    }
+
+    @ReactMethod
+    public void newGPChat(String params, Promise promise) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Log.d(CoreModule.NAME, params);
+                    byte[] bytes = params.getBytes(StandardCharsets.UTF_8);
+                    byte[] res = cService.newGPChat(bytes);
+                    if (res == null) {
+                        promise.reject(new Error("failed to create"));
+                    } else {
+                        promise.resolve(new String(res, StandardCharsets.UTF_8));
                     }
                 } catch (Exception e) {
                     promise.reject(e);

@@ -38,7 +38,7 @@ func NewBridge(repoPath string, conf *HostConfig) (*Bridge, error) {
 		defer sub.Close()
 
 		for e := range sub.Out() {
-			bevt,_ := BMessageEventMarshal(e.(event.MessageEventObj))
+			bevt, _ := BMessageEventMarshal(e.(event.MessageEventObj))
 			getEmitter().Emit(bevt)
 		}
 	}()
@@ -78,7 +78,7 @@ func (b *Bridge) GetIdentity() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	
+
 	return Marshal(&idn)
 }
 
@@ -173,7 +173,7 @@ func (b *Bridge) Seen(chatID string) error {
 
 func (b Bridge) NewPMChat(contactID string) (string, error) {
 	id := entity.ID(contactID)
-	con,err  := b.ContactBookAPI().Get(id)
+	con, err := b.ContactBookAPI().Get(id)
 	if err != nil {
 		return "", err
 	}
@@ -184,17 +184,21 @@ func (b Bridge) NewPMChat(contactID string) (string, error) {
 	return Marshal(&pm)
 }
 
-func (b Bridge) NewGPChat(opt string) (string, error) {
+func (b Bridge) NewGPChat(opt []byte) ([]byte, error) {
 	var o core.NewChatOpt
-	o, err := UnMarshal[core.NewChatOpt](opt)
+	o, err := UnMarshalByte[core.NewChatOpt](opt)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	pm, err := b.ChatAPI().New(o)
+	ch, err := b.ChatAPI().New(o)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return Marshal(&pm)
+	err = b.ChatAPI().Invite(ch.ID, ch.Members)
+	if err != nil {
+		return nil, err
+	}
+	return ch.Json()
 }
 
 func (b Bridge) GetPMChat(contactID string) (string, error) {
@@ -206,5 +210,5 @@ func (b Bridge) GetPMChat(contactID string) (string, error) {
 	if len(pm) == 0 {
 		return "", errors.New("not found")
 	}
-	return Marshal(&pm)
+	return Marshal(&pm[0])
 }

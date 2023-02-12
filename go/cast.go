@@ -42,3 +42,12 @@ func UnMarshal[e any](j string) (e, error) {
 	}
 	return *i, nil
 }
+
+func UnMarshalByte[e any](b []byte) (e, error) {
+	i := new(e)
+	err := json.Unmarshal(b, i)
+	if err != nil {
+		return *i, err
+	}
+	return *i, nil
+}

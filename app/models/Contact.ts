@@ -7,10 +7,16 @@ export const ContactModel = types
   .model("Contact")
   .props({
     _id: types.identifier,
-    name: types.string
+    name: types.string,
+    selected : types.maybe(types.boolean)
   })
   .views((self) => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
-  .actions((self) => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
+  .actions((self) => ({
+    onChangeSelect(){
+      console.log("Called!")
+      self.selected = !self.selected
+    }
+  })) // eslint-disable-line @typescript-eslint/no-unused-vars
 
 export interface Contact extends Instance<typeof ContactModel> {}
 export interface ContactSnapshotOut extends SnapshotOut<typeof ContactModel> {}

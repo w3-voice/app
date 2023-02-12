@@ -5,7 +5,7 @@ import { Banner } from 'react-native-paper';
 export interface ErrorBannerProps {
     message: string,
     visible: boolean,
-    done: ()=>{},
+    done: ()=> void,
 }
 
 export const ErrorBanner = ({message, visible, done}:ErrorBannerProps) => {

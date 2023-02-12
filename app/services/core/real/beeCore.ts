@@ -14,7 +14,8 @@ import {
     PermissionStatus,
     Filter,
     Callback,
-    Event
+    Event,
+    NewChatOpt
 } from "./beeCore.type";
 import { EmitterSubscription, NativeEventEmitter, NativeModules } from 'react-native';
 const { CoreModule, PermissionsModule } = NativeModules;
@@ -22,6 +23,12 @@ import 'fastestsmallesttextencoderdecoder';
 import { Buffer } from 'buffer';
 
 class ChatAPI implements IChat {
+    async create(opt: NewChatOpt): Promise<Chat> {
+        const res = await CoreModule.newGPChat(toJson(opt))
+        const chat: Chat = parse<Chat>(res)
+        return chat
+    }
+    
     seen(id: string): void {
         CoreModule.seen(id)
     }
@@ -161,11 +168,14 @@ class RNBeeCore implements BeeCoreInstance {
     async bindService(): Promise<boolean> {
         return new Promise((res, rej) => {
             try {
+                console.log("bind called")
                 CoreModule.startBind((val) => {
                     this.ready = val
+                    console.log("bind called")
                     res(val)
                 });
             } catch (e) {
+                console.error(e)
                 rej(e)
             }
 
@@ -199,9 +209,9 @@ export const parse = <T>(msg: string): T => {
     return obj;
 };
 
-export const objectToBase64String = (obj: object): string => {
+export const toJson = (obj: object): string => {
     const json = JSON.stringify(obj);
-    return Buffer.from(json).toString('base64');
+    return json
 };
 
 

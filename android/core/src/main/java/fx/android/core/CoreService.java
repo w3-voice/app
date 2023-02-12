@@ -24,6 +24,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 
 import bridge.Bridge;
 import bridge.Bridge_;
@@ -133,9 +134,6 @@ public class CoreService extends Service {
         }
         hostConfig.setBroadCaster(emitter);
         this.core = Bridge.newBridge(path, hostConfig);
-        String s1 = this.core.getInterfaces();
-        Log.d(NAME, "driver" + s1);
-
     }
 
     public void showMessageNotification(String msgID) throws Exception {
@@ -369,7 +367,16 @@ public class CoreService extends Service {
         public void seen(String chatID) throws RemoteException {
             try {
                 core.seen(chatID);
-            } catch (Exception e) { }
+            } catch (Exception ignored) { }
+        }
+        
+        public byte[] newGPChat(byte[] parms) throws RemoteException {
+            Log.d(NAME, "newGPChat called with: "+ new String(parms, StandardCharsets.UTF_8) );
+            try {
+                return core.newGPChat(parms);
+            } catch (Exception e) {
+                return null;
+            }
         }
     };
 
